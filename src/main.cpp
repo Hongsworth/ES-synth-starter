@@ -49,9 +49,20 @@ void setOutMuxBit(const uint8_t bitIdx, const bool value) {
 
 std::string toBinary(int n)
 {
-    std::string r;
-    while(n!=0) {r=(n%2==0 ?"0":"1")+r; n/=2;}
-    return r;
+   //only need these but a more elegant solution is preferred. 
+   //this is a brute force approach that is a placeholder for later (not a priority. )
+  if (n == 0)
+  {
+    return "000";
+  }
+  if (n == 1){
+    return "001";
+
+  }
+  if (n == 2){
+    return "010";
+  }
+    
 }
 
 void setRow(uint8_t rowIdx){
@@ -62,9 +73,15 @@ void setRow(uint8_t rowIdx){
 
   int ra0, ra1, ra2; 
 
-  ra0 = (binaryIdx[0] == '1') ? HIGH : LOW; //set values of ra pins 
+  ra0 = (binaryIdx[2] == '1') ? HIGH : LOW; //set values of ra pins 
   ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
-  ra2 = (binaryIdx[2] == '1') ? HIGH : LOW;
+  ra2 = (binaryIdx[0] == '1') ? HIGH : LOW;
+
+  (binaryIdx[0] == '1') ? Serial.print("1"): Serial.print("0");
+  (binaryIdx[1] == '1') ? Serial.print("1"): Serial.print("0");
+  (binaryIdx[2] == '1') ? Serial.print("1"): Serial.print("0");
+
+
 
   digitalWrite(REN_PIN, LOW); //write low at start
   digitalWrite(RA0_PIN, ra0); //write ra pin values determined from ternary block.
@@ -74,15 +91,16 @@ void setRow(uint8_t rowIdx){
 
 }
 
-uint8_t readCols(){
+uint8_t readCols(uint8_t row){
   
   //set ra0 - 2 pins to low, ren to high
   // digitalWrite(RA0_PIN, LOW );
   // digitalWrite(RA1_PIN, LOW );
   // digitalWrite(RA2_PIN, LOW );
   // digitalWrite(REN_PIN,HIGH);
-  setRow(0);
+  setRow(row);
   
+  delay(0.5);
 
   int c0 = digitalRead(C0_PIN);
   int c1 = digitalRead(C1_PIN);
@@ -94,10 +112,10 @@ uint8_t readCols(){
   std::string out = "";
   uint8_t output;
   
-(c0 == LOW)?  Serial.print("1") : Serial.print("0"); 
-(c1 == LOW)?  Serial.print("1") : Serial.print("0"); 
-(c2 == LOW)?  Serial.print("1") : Serial.print("0"); 
-(c3 == LOW)?  Serial.print("1") : Serial.print("0"); 
+// (c0 == LOW)?  Serial.print("1") : Serial.print("0"); 
+// (c1 == LOW)?  Serial.print("1") : Serial.print("0"); 
+// (c2 == LOW)?  Serial.print("1") : Serial.print("0"); 
+// (c3 == LOW)?  Serial.print("1") : Serial.print("0"); 
 
   output += (c0 == HIGH)?  pow(2, 7): 0; 
   output += (c1 == HIGH)?  pow(2, 6): 0; 
@@ -105,8 +123,6 @@ uint8_t readCols(){
   output += (c3 == HIGH)?  pow(2, 4): 0; 
   Serial.println();
 
-
-  
   return output;
 
 }
@@ -148,6 +164,15 @@ void loop() {
   static uint32_t next = millis();
   static uint32_t count = 0;
 
+
+  int keyArray[7];
+
+  for (int i = 0; i <= 2; i++)
+  {
+    keyArray[i] = readCols(i);
+    delay(3);
+  }
+
   if (millis() > next) {
     next += interval;
 
@@ -157,15 +182,24 @@ void loop() {
     u8g2.drawStr(2,10,"Helllo World!");  // write something to the internal memory
     u8g2.setCursor(2,20);
     //u8g2.print(count++);
-    uint8_t keys = readCols();
+
     u8g2.setCursor(2,20);
-    u8g2.print(keys,HEX); 
-    u8g2.sendBuffer();          // transfer internal memory to the display
+    u8g2.print(keyArray[0],HEX); 
+    //u8g2.sendBuffer();          // transfer internal memory to the display
+    delay(3);
+    u8g2.setCursor(22,20);
+    u8g2.print(keyArray[1],HEX); 
+    //u8g2.sendBuffer();    
+    delay(3);
+    u8g2.setCursor(42,20);
+    u8g2.print(keyArray[2],HEX); 
+    u8g2.sendBuffer();  
+    delay(3);
 
     //Toggle LED
     digitalToggle(LED_BUILTIN);
 
-    readCols();
+    
 
     if (count > 200){
       exit(0);
