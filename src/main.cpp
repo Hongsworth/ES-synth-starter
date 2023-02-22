@@ -47,13 +47,41 @@ void setOutMuxBit(const uint8_t bitIdx, const bool value) {
       digitalWrite(REN_PIN,LOW);
 }
 
+std::string toBinary(int n)
+{
+    std::string r;
+    while(n!=0) {r=(n%2==0 ?"0":"1")+r; n/=2;}
+    return r;
+}
+
+void setRow(uint8_t rowIdx){
+
+  //make more efficient and optimal
+  // parse the incoming value/ turn into binary, 
+  std::string binaryIdx = toBinary(rowIdx);
+
+  int ra0, ra1, ra2; 
+
+  ra0 = (binaryIdx[0] == '1') ? HIGH : LOW; //set values of ra pins 
+  ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
+  ra2 = (binaryIdx[2] == '1') ? HIGH : LOW;
+
+  digitalWrite(REN_PIN, LOW); //write low at start
+  digitalWrite(RA0_PIN, ra0); //write ra pin values determined from ternary block.
+  digitalWrite(RA1_PIN, ra1);
+  digitalWrite(RA2_PIN, ra2);
+  digitalWrite(REN_PIN, HIGH); //write high at end.
+
+}
+
 uint8_t readCols(){
   
   //set ra0 - 2 pins to low, ren to high
-  digitalWrite(RA0_PIN, LOW );
-  digitalWrite(RA1_PIN, LOW );
-  digitalWrite(RA2_PIN, LOW );
-  digitalWrite(REN_PIN,HIGH);
+  // digitalWrite(RA0_PIN, LOW );
+  // digitalWrite(RA1_PIN, LOW );
+  // digitalWrite(RA2_PIN, LOW );
+  // digitalWrite(REN_PIN,HIGH);
+  setRow(0);
   
 
   int c0 = digitalRead(C0_PIN);
