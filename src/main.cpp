@@ -47,7 +47,7 @@ void setOutMuxBit(const uint8_t bitIdx, const bool value) {
       digitalWrite(REN_PIN,LOW);
 }
 
-void readCols(){
+uint8_t readCols(){
   
   //set ra0 - 2 pins to low, ren to high
   digitalWrite(RA0_PIN, LOW );
@@ -64,15 +64,22 @@ void readCols(){
   //LOW WHEN PRESSED
   
   std::string out = "";
+  uint8_t output;
   
-  (c0 == LOW)?  Serial.print("1") : Serial.print("0"); 
-  (c1 == LOW)?  Serial.print("1") : Serial.print("0"); 
-  (c2 == LOW)?  Serial.print("1") : Serial.print("0"); 
-  (c3 == LOW)?  Serial.print("1") : Serial.print("0"); 
-  
+(c0 == LOW)?  Serial.print("1") : Serial.print("0"); 
+(c1 == LOW)?  Serial.print("1") : Serial.print("0"); 
+(c2 == LOW)?  Serial.print("1") : Serial.print("0"); 
+(c3 == LOW)?  Serial.print("1") : Serial.print("0"); 
+
+  output += (c0 == HIGH)?  pow(2, 7): 0; 
+  output += (c1 == HIGH)?  pow(2, 6): 0; 
+  output += (c2 == HIGH)?  pow(2, 5): 0; 
+  output += (c3 == HIGH)?  pow(2, 4): 0; 
   Serial.println();
 
+
   
+  return output;
 
 }
 
@@ -121,7 +128,10 @@ void loop() {
     u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
     u8g2.drawStr(2,10,"Helllo World!");  // write something to the internal memory
     u8g2.setCursor(2,20);
-    u8g2.print(count++);
+    //u8g2.print(count++);
+    uint8_t keys = readCols();
+    u8g2.setCursor(2,20);
+    u8g2.print(keys,HEX); 
     u8g2.sendBuffer();          // transfer internal memory to the display
 
     //Toggle LED
