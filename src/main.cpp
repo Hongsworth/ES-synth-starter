@@ -47,6 +47,35 @@ void setOutMuxBit(const uint8_t bitIdx, const bool value) {
       digitalWrite(REN_PIN,LOW);
 }
 
+void readCols(){
+  
+  //set ra0 - 2 pins to low, ren to high
+  digitalWrite(RA0_PIN, LOW );
+  digitalWrite(RA1_PIN, LOW );
+  digitalWrite(RA2_PIN, LOW );
+  digitalWrite(REN_PIN,HIGH);
+  
+
+  int c0 = digitalRead(C0_PIN);
+  int c1 = digitalRead(C1_PIN);
+  int c2 = digitalRead(C2_PIN);
+  int c3 = digitalRead(C3_PIN);
+
+  //LOW WHEN PRESSED
+  
+  std::string out = "";
+  
+  (c0 == LOW)?  Serial.print("1") : Serial.print("0"); 
+  (c1 == LOW)?  Serial.print("1") : Serial.print("0"); 
+  (c2 == LOW)?  Serial.print("1") : Serial.print("0"); 
+  (c3 == LOW)?  Serial.print("1") : Serial.print("0"); 
+  
+  Serial.println();
+
+  
+
+}
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -97,5 +126,13 @@ void loop() {
 
     //Toggle LED
     digitalToggle(LED_BUILTIN);
+
+    readCols();
+
+    if (count > 200){
+      exit(0);
+    }
+    
+    
   }
 }
