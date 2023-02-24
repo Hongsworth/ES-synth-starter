@@ -134,7 +134,8 @@ void sampleISR() {
   static int32_t phaseAcc = 0;
   phaseAcc += currentStepSize;
 
-  int32_t Vout = phaseAcc >> 19; //change for volume to increase! (12 is the highest I reccomend, quite loud )
+  int32_t Vout = phaseAcc >> 19; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
+  // volume is louder the closer to 12.
 
   analogWrite(OUTR_PIN, Vout + 128);
 }
