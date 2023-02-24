@@ -134,13 +134,20 @@ void sampleISR() {
   static int32_t phaseAcc = 0;
   phaseAcc += currentStepSize;
 
-  int32_t Vout = phaseAcc >> 24;
+  int32_t Vout = phaseAcc >> 19; //change for volume to increase! (12 is the highest I reccomend, quite loud )
 
   analogWrite(OUTR_PIN, Vout + 128);
 }
 
 void setup() {
   // put your setup code here, to run once:
+
+  TIM_TypeDef *Instance = TIM1;
+  HardwareTimer *sampleTimer = new HardwareTimer(Instance);
+
+  sampleTimer->setOverflow(22000, HERTZ_FORMAT);
+  sampleTimer->attachInterrupt(sampleISR);
+  sampleTimer->resume();
 
   //Set pin directions
   pinMode(RA0_PIN, OUTPUT);
