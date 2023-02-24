@@ -4,6 +4,9 @@
 //Constants
   const uint32_t interval = 100; //Display update interval
 
+  volatile int32_t currentStepSize;
+  int keyArray[7];
+
 //Pin definitions
   //Row select and enable
   const int RA0_PIN = D3;
@@ -127,6 +130,15 @@ uint8_t readCols(uint8_t row){
 
 }
 
+void sampleISR() {
+  static int32_t phaseAcc = 0;
+  phaseAcc += currentStepSize;
+
+  int32_t Vout = phaseAcc >> 24;
+
+  analogWrite(OUTR_PIN, Vout + 128);
+}
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -159,13 +171,49 @@ void setup() {
   Serial.println("Hello World");
 }
 
+std::string noteSelect(int keyArr[7], const int32_t stepSizes[12]){
+  for (int i =0; i < 3; i++){
+    
+    if (keyArr[i] == 112){
+      if (i == 0) {currentStepSize = stepSizes[0]; return "C";}
+      if (i == 1) {currentStepSize = stepSizes[1]; return "E";}
+      if (i == 2) {currentStepSize = stepSizes[2]; return "G#";}
+    }
+    if (keyArr[i] == 208){
+      if (i == 0) {currentStepSize = stepSizes[3]; return "D";}
+      if (i == 1) {currentStepSize = stepSizes[4]; return "F#";}
+      if (i == 2) {currentStepSize = stepSizes[5]; return "A#";}
+    }
+    if (keyArr[i] == 176){
+      if (i == 0) {currentStepSize = stepSizes[6]; return "C#";}
+      if (i == 1) {currentStepSize = stepSizes[7]; return "F";}
+      if (i == 2) {currentStepSize = stepSizes[8]; return "A";}
+    }
+    if (keyArr[i] == 224){
+      if (i == 0) {currentStepSize = stepSizes[9]; return "D#";}
+      if (i == 1) {currentStepSize = stepSizes[10]; return "G";}
+      if (i == 2) {currentStepSize = stepSizes[11]; return "B";}
+    }
+  }
+  currentStepSize = 0;
+  return "No Note";
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
+  const float diff = pow(2, 1/12);
+  const int32_t base = 2^32;
   static uint32_t next = millis();
   static uint32_t count = 0;
+  const int32_t stepSizes[12] = {base * (440 - 8*diff), base * (440 - 7*diff), base * (440 - 6*diff),
+  base * (440 - 5*diff), base * (440 - 4*diff), base * (440 - 3*diff), base * (440 - 2*diff), base * (440 - 1*diff),
+  base * (440), base * (440 + 1*diff), base * (440 + 2*diff), base * (440 + 3*diff)};
+ 
 
+  
 
-  int keyArray[7];
+  
+  
 
   for (int i = 0; i <= 2; i++)
   {
@@ -173,13 +221,17 @@ void loop() {
     delay(3);
   }
 
+  
+
   if (millis() > next) {
     next += interval;
+
+    
 
     //Update display
     u8g2.clearBuffer();         // clear the internal memory
     u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
-    u8g2.drawStr(2,10,"Helllo World!");  // write something to the internal memory
+    u8g2.drawStr(2,10,"Hello World!");  // write something to the internal memory
     u8g2.setCursor(2,20);
     //u8g2.print(count++);
 
@@ -192,9 +244,28 @@ void loop() {
     //u8g2.sendBuffer();    
     delay(3);
     u8g2.setCursor(42,20);
-    u8g2.print(keyArray[2],HEX); 
+    u8g2.print(keyArray[2],HEX);
+
+
+  
+  //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
+  //char conversion. Would use pointers but causes headaches. 
+  std::string note = noteSelect(keyArray, stepSizes);
+  for (int i = 0; i < note.size(); i++){
+    char a = note[i];
+    u8g2.setCursor(62 + i*5, 20);
+    u8g2.print(a); 
+  }
+
+
+
+
+
+
     u8g2.sendBuffer();  
     delay(3);
+
+    
 
     //Toggle LED
     digitalToggle(LED_BUILTIN);
