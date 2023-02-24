@@ -80,9 +80,9 @@ void setRow(uint8_t rowIdx){
   ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
   ra2 = (binaryIdx[0] == '1') ? HIGH : LOW;
 
-  (binaryIdx[0] == '1') ? Serial.print("1"): Serial.print("0");
-  (binaryIdx[1] == '1') ? Serial.print("1"): Serial.print("0");
-  (binaryIdx[2] == '1') ? Serial.print("1"): Serial.print("0");
+  // (binaryIdx[0] == '1') ? Serial.print("1"): Serial.print("0");
+  // (binaryIdx[1] == '1') ? Serial.print("1"): Serial.print("0");
+  // (binaryIdx[2] == '1') ? Serial.print("1"): Serial.print("0");
 
 
 
@@ -124,7 +124,7 @@ uint8_t readCols(uint8_t row){
   output += (c1 == HIGH)?  pow(2, 6): 0; 
   output += (c2 == HIGH)?  pow(2, 5): 0; 
   output += (c3 == HIGH)?  pow(2, 4): 0; 
-  Serial.println();
+  //Serial.println();
 
   return output;
 
@@ -207,21 +207,21 @@ std::string noteSelect(int keyArr[7], const int32_t stepSizes[12]){
   return "No Note";
 }
 
+float rootRet(int power) //return a power of the root of 12
+{
+  return pow(2, power/12);
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
-  const float diff = pow(2, 1/12);
-  const int32_t base = 2^32;
-  static uint32_t next = millis();
   static uint32_t count = 0;
-  const int32_t stepSizes[12] = {base * (440 - 8*diff), base * (440 - 7*diff), base * (440 - 6*diff),
-  base * (440 - 5*diff), base * (440 - 4*diff), base * (440 - 3*diff), base * (440 - 2*diff), base * (440 - 1*diff),
-  base * (440), base * (440 + 1*diff), base * (440 + 2*diff), base * (440 + 3*diff)};
- 
+  static uint32_t next = millis();
 
-  
+  const float diff = pow(2, 1/12);
+  const int32_t base = (2^32);
 
-  
-  
+   const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
+   base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
 
   for (int i = 0; i <= 2; i++)
   {
@@ -229,12 +229,9 @@ void loop() {
     delay(3);
   }
 
-  
 
   if (millis() > next) {
     next += interval;
-
-    
 
     //Update display
     u8g2.clearBuffer();         // clear the internal memory
@@ -266,19 +263,12 @@ void loop() {
   }
 
 
-
-
-
-
+    Serial.println((currentStepSize >> 24) + 128);
     u8g2.sendBuffer();  
     delay(3);
 
-    
-
     //Toggle LED
     digitalToggle(LED_BUILTIN);
-
-    
 
     if (count > 200){
       exit(0);
