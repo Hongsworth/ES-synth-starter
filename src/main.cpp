@@ -1,11 +1,17 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include <STM32FreeRTOS.h>
 
 //Constants
   const uint32_t interval = 100; //Display update interval
 
   volatile int32_t currentStepSize;
-  int keyArray[7];
+  volatile int32_t keyArray[7];
+  const int32_t base = (2^32);
+  const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
+   base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
+  
+
 
 //Pin definitions
   //Row select and enable
@@ -68,6 +74,34 @@ std::string toBinary(int n)
     
 }
 
+std::string noteSelect(const int32_t stepSizes[12]){
+  for (int i =0; i < 3; i++){
+    
+    if (keyArray[i] == 112){
+      if (i == 0) {currentStepSize = stepSizes[0]; return "C";}
+      if (i == 1) {currentStepSize = stepSizes[1]; return "E";}
+      if (i == 2) {currentStepSize = stepSizes[2]; return "G#";}
+    }
+    if (keyArray[i] == 208){
+      if (i == 0) {currentStepSize = stepSizes[3]; return "D";}
+      if (i == 1) {currentStepSize = stepSizes[4]; return "F#";}
+      if (i == 2) {currentStepSize = stepSizes[5]; return "A#";}
+    }
+    if (keyArray[i] == 176){
+      if (i == 0) {currentStepSize = stepSizes[6]; return "C#";}
+      if (i == 1) {currentStepSize = stepSizes[7]; return "F";}
+      if (i == 2) {currentStepSize = stepSizes[8]; return "A";}
+    }
+    if (keyArray[i] == 224){
+      if (i == 0) {currentStepSize = stepSizes[9]; return "D#";}
+      if (i == 1) {currentStepSize = stepSizes[10]; return "G";}
+      if (i == 2) {currentStepSize = stepSizes[11]; return "B";}
+    }
+  }
+  currentStepSize = 0;
+  return "No Note";
+}
+
 void setRow(uint8_t rowIdx){
 
   //make more efficient and optimal
@@ -83,16 +117,98 @@ void setRow(uint8_t rowIdx){
   // (binaryIdx[0] == '1') ? Serial.print("1"): Serial.print("0");
   // (binaryIdx[1] == '1') ? Serial.print("1"): Serial.print("0");
   // (binaryIdx[2] == '1') ? Serial.print("1"): Serial.print("0");
-
-
-
+  
   digitalWrite(REN_PIN, LOW); //write low at start
   digitalWrite(RA0_PIN, ra0); //write ra pin values determined from ternary block.
   digitalWrite(RA1_PIN, ra1);
   digitalWrite(RA2_PIN, ra2);
   digitalWrite(REN_PIN, HIGH); //write high at end.
+  
 
 }
+
+void displayUpdateTask(void * param){
+
+  const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+
+  while(1){
+    vTaskDelayUntil( &xLastWakeTime, xFrequency);
+    //Update display
+    u8g2.clearBuffer();         // clear the internal memory
+
+    u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
+    u8g2.drawStr(2,10,"Hello World!");  // write something to the internal memory
+    u8g2.setCursor(2,20);
+    //u8g2.print(count++);
+
+    u8g2.setCursor(2,20);
+    u8g2.print(keyArray[0],HEX); 
+    //u8g2.sendBuffer();          // transfer internal memory to the display
+
+    u8g2.setCursor(22,20);
+    u8g2.print(keyArray[1],HEX); 
+    //u8g2.sendBuffer();    
+    
+    u8g2.setCursor(42,20);
+    u8g2.print(keyArray[2],HEX);
+
+
+  
+  //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
+  //char conversion. Would use pointers but causes headaches. 
+  
+  std::string note = noteSelect(stepSizes);
+  for (int i = 0; i < note.size(); i++){
+    char a = note[i];
+    u8g2.setCursor(62 + i*5, 20);
+    u8g2.print(a); 
+  }
+
+
+    //Serial.println((currentStepSize >> 24) + 128);
+    u8g2.sendBuffer();  
+ 
+
+    //Toggle LED
+    digitalToggle(LED_BUILTIN);
+  } 
+  
+}
+
+volatile uint8_t output = 0;
+
+void scanKeys(void * pvParameters){
+  const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(1){
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    for (int i = 0; i < 3; i++)
+  {
+    
+    setRow(i);
+
+    int c0 = digitalRead(C0_PIN);
+    int c1 = digitalRead(C1_PIN);
+    int c2 = digitalRead(C2_PIN);
+    int c3 = digitalRead(C3_PIN);
+
+    keyArray[i] = 0;
+
+    keyArray[i] +=  (c0 == HIGH) ?  pow(2, 7): 0; 
+    keyArray[i]  += (c1 == HIGH) ?  pow(2, 6): 0; 
+    keyArray[i]  += (c2 == HIGH) ?  pow(2, 5): 0; 
+    keyArray[i]  += (c3 == HIGH) ?  pow(2, 4): 0; 
+
+    
+
+  
+  }
+  }
+
+}
+
+
 
 uint8_t readCols(uint8_t row){
   
@@ -134,7 +250,7 @@ void sampleISR() {
   static int32_t phaseAcc = 0;
   phaseAcc += currentStepSize;
 
-  int32_t Vout = phaseAcc >> 19; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
+  int32_t Vout = phaseAcc >> 24; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
   // volume is louder the closer to 12.
 
   analogWrite(OUTR_PIN, Vout + 128);
@@ -174,38 +290,34 @@ void setup() {
   u8g2.begin();
   setOutMuxBit(DEN_BIT, HIGH);  //Enable display power supply
 
+
+
+  TaskHandle_t scanKeysHandle = NULL;
+  xTaskCreate(
+scanKeys,		/* Function that implements the task */
+"scanKeys",		/* Text name for the task */
+64,      		/* Stack size in words, not bytes */
+NULL,			/* Parameter passed into the task */
+2,			/* Task priority */
+&scanKeysHandle );  /* Pointer to store the task handle */
+
+TaskHandle_t displayUpdateHandle= NULL;
+  xTaskCreate(
+displayUpdateTask,		/* Function that implements the task */
+"displayUpdate",		/* Text name for the task */
+64,      		/* Stack size in words, not bytes */
+NULL,			/* Parameter passed into the task */
+1,			/* Task priority */
+&displayUpdateHandle );  /* Pointer to store the task handle */
+
   //Initialise UART
   Serial.begin(9600);
   Serial.println("Hello World");
+
+  vTaskStartScheduler();
 }
 
-std::string noteSelect(int keyArr[7], const int32_t stepSizes[12]){
-  for (int i =0; i < 3; i++){
-    
-    if (keyArr[i] == 112){
-      if (i == 0) {currentStepSize = stepSizes[0]; return "C";}
-      if (i == 1) {currentStepSize = stepSizes[1]; return "E";}
-      if (i == 2) {currentStepSize = stepSizes[2]; return "G#";}
-    }
-    if (keyArr[i] == 208){
-      if (i == 0) {currentStepSize = stepSizes[3]; return "D";}
-      if (i == 1) {currentStepSize = stepSizes[4]; return "F#";}
-      if (i == 2) {currentStepSize = stepSizes[5]; return "A#";}
-    }
-    if (keyArr[i] == 176){
-      if (i == 0) {currentStepSize = stepSizes[6]; return "C#";}
-      if (i == 1) {currentStepSize = stepSizes[7]; return "F";}
-      if (i == 2) {currentStepSize = stepSizes[8]; return "A";}
-    }
-    if (keyArr[i] == 224){
-      if (i == 0) {currentStepSize = stepSizes[9]; return "D#";}
-      if (i == 1) {currentStepSize = stepSizes[10]; return "G";}
-      if (i == 2) {currentStepSize = stepSizes[11]; return "B";}
-    }
-  }
-  currentStepSize = 0;
-  return "No Note";
-}
+
 
 float rootRet(int power) //return a power of the root of 12
 {
@@ -213,67 +325,76 @@ float rootRet(int power) //return a power of the root of 12
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  static uint32_t count = 0;
-  static uint32_t next = millis();
-
-  const float diff = pow(2, 1/12);
-  const int32_t base = (2^32);
-
-   const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
-   base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
-
-  for (int i = 0; i <= 2; i++)
-  {
-    keyArray[i] = readCols(i);
-    delay(3);
-  }
+  
+    //UNCOMMENT THIS AND GET RID OF THE RTOS IMPLEMENTATION TO PUT EVERYTHING BACK IN THE LOOP
 
 
-  if (millis() > next) {
-    next += interval;
+  // // put your main code here, to run repeatedly:
+  // static uint32_t count = 0;
+  // static uint32_t next = millis();
 
-    //Update display
-    u8g2.clearBuffer();         // clear the internal memory
-    u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
-    u8g2.drawStr(2,10,"Hello World!");  // write something to the internal memory
-    u8g2.setCursor(2,20);
-    //u8g2.print(count++);
+  // const float diff = pow(2, 1/12);
+  // const int32_t base = (2^32);
 
-    u8g2.setCursor(2,20);
-    u8g2.print(keyArray[0],HEX); 
-    //u8g2.sendBuffer();          // transfer internal memory to the display
-    delay(3);
-    u8g2.setCursor(22,20);
-    u8g2.print(keyArray[1],HEX); 
-    //u8g2.sendBuffer();    
-    delay(3);
-    u8g2.setCursor(42,20);
-    u8g2.print(keyArray[2],HEX);
+  //  const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
+  //  base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
+  // int *param;
+
+  // // for (int i = 0; i < 3; i++)
+  // // {
+  // //   setRow(i);
+  // //   delay(3);
+  // //   keyArray[i] = readCols(i);
+  // // }
+  // delay(3);
+  // //scanKeys(NULL);
+
+
+  // if (millis() > next) {
+  //   next += interval;
+
+  //   //Update display
+  //   u8g2.clearBuffer();         // clear the internal memory
+  //   u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
+  //   u8g2.drawStr(2,10,"Hello World!");  // write something to the internal memory
+  //   u8g2.setCursor(2,20);
+  //   //u8g2.print(count++);
+
+  //   u8g2.setCursor(2,20);
+  //   u8g2.print(keyArray[0],HEX); 
+  //   //u8g2.sendBuffer();          // transfer internal memory to the display
+  //   delay(3);
+  //   u8g2.setCursor(22,20);
+  //   u8g2.print(keyArray[1],HEX); 
+  //   //u8g2.sendBuffer();    
+  //   delay(3);
+  //   u8g2.setCursor(42,20);
+  //   u8g2.print(keyArray[2],HEX);
 
 
   
-  //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
-  //char conversion. Would use pointers but causes headaches. 
-  std::string note = noteSelect(keyArray, stepSizes);
-  for (int i = 0; i < note.size(); i++){
-    char a = note[i];
-    u8g2.setCursor(62 + i*5, 20);
-    u8g2.print(a); 
+  // //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
+  // //char conversion. Would use pointers but causes headaches. 
+  
+  // std::string note = noteSelect(keyArray, stepSizes);
+  // for (int i = 0; i < note.size(); i++){
+  //   char a = note[i];
+  //   u8g2.setCursor(62 + i*5, 20);
+  //   u8g2.print(a); 
+  // }
+
+
+  //   Serial.println((currentStepSize >> 24) + 128);
+  //   u8g2.sendBuffer();  
+  //   delay(3);
+
+  //   //Toggle LED
+  //   digitalToggle(LED_BUILTIN);
+
+    
+    
+    
   }
 
 
-    Serial.println((currentStepSize >> 24) + 128);
-    u8g2.sendBuffer();  
-    delay(3);
 
-    //Toggle LED
-    digitalToggle(LED_BUILTIN);
-
-    if (count > 200){
-      exit(0);
-    }
-    
-    
-  }
-}
