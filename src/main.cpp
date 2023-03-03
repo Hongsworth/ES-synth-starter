@@ -176,11 +176,18 @@ void displayUpdateTask(void * param){
   
 }
 
-volatile uint8_t output = 0;
+volatile uint32_t output = 0;
 
 void scanKeys(void * pvParameters){
   const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
+
+  volatile int c0 = HIGH;
+  volatile int c1 = HIGH;
+  volatile int c2 = HIGH;
+  volatile int c3 = HIGH;
+
+
   while(1){
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     for (int i = 0; i < 3; i++)
@@ -188,21 +195,33 @@ void scanKeys(void * pvParameters){
     
     setRow(i);
 
-    int c0 = digitalRead(C0_PIN);
-    int c1 = digitalRead(C1_PIN);
-    int c2 = digitalRead(C2_PIN);
-    int c3 = digitalRead(C3_PIN);
+    c0 = digitalRead(C0_PIN);
+    c1 = digitalRead(C1_PIN);
+    c2 = digitalRead(C2_PIN);
+    c3 = digitalRead(C3_PIN);
 
-    keyArray[i] = 0;
+    output = 0;
 
-    keyArray[i] +=  (c0 == HIGH) ?  pow(2, 7): 0; 
-    keyArray[i]  += (c1 == HIGH) ?  pow(2, 6): 0; 
-    keyArray[i]  += (c2 == HIGH) ?  pow(2, 5): 0; 
-    keyArray[i]  += (c3 == HIGH) ?  pow(2, 4): 0; 
+    //removed ternary ops
 
-    
+    if (c0 == HIGH){
+      output+=pow(2, 7);
+    }
+    if (c1 == HIGH){
+      output+=pow(2, 6);
+    }
+    if (c2 == HIGH){
+      output+=pow(2, 5);
+    }
+    if (c3 == HIGH){
+      output+=pow(2, 4);
+    }
 
-  
+    delay(5);
+   
+    keyArray[i] = output;
+
+
   }
   }
 
@@ -212,11 +231,6 @@ void scanKeys(void * pvParameters){
 
 uint8_t readCols(uint8_t row){
   
-  //set ra0 - 2 pins to low, ren to high
-  // digitalWrite(RA0_PIN, LOW );
-  // digitalWrite(RA1_PIN, LOW );
-  // digitalWrite(RA2_PIN, LOW );
-  // digitalWrite(REN_PIN,HIGH);
   setRow(row);
   
   delay(0.5);
@@ -230,17 +244,11 @@ uint8_t readCols(uint8_t row){
   
   std::string out = "";
   uint8_t output;
-  
-// (c0 == LOW)?  Serial.print("1") : Serial.print("0"); 
-// (c1 == LOW)?  Serial.print("1") : Serial.print("0"); 
-// (c2 == LOW)?  Serial.print("1") : Serial.print("0"); 
-// (c3 == LOW)?  Serial.print("1") : Serial.print("0"); 
 
   output += (c0 == HIGH)?  pow(2, 7): 0; 
   output += (c1 == HIGH)?  pow(2, 6): 0; 
   output += (c2 == HIGH)?  pow(2, 5): 0; 
   output += (c3 == HIGH)?  pow(2, 4): 0; 
-  //Serial.println();
 
   return output;
 
@@ -326,74 +334,6 @@ float rootRet(int power) //return a power of the root of 12
 
 void loop() {
   
-    //UNCOMMENT THIS AND GET RID OF THE RTOS IMPLEMENTATION TO PUT EVERYTHING BACK IN THE LOOP
-
-
-  // // put your main code here, to run repeatedly:
-  // static uint32_t count = 0;
-  // static uint32_t next = millis();
-
-  // const float diff = pow(2, 1/12);
-  // const int32_t base = (2^32);
-
-  //  const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
-  //  base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
-  // int *param;
-
-  // // for (int i = 0; i < 3; i++)
-  // // {
-  // //   setRow(i);
-  // //   delay(3);
-  // //   keyArray[i] = readCols(i);
-  // // }
-  // delay(3);
-  // //scanKeys(NULL);
-
-
-  // if (millis() > next) {
-  //   next += interval;
-
-  //   //Update display
-  //   u8g2.clearBuffer();         // clear the internal memory
-  //   u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
-  //   u8g2.drawStr(2,10,"Hello World!");  // write something to the internal memory
-  //   u8g2.setCursor(2,20);
-  //   //u8g2.print(count++);
-
-  //   u8g2.setCursor(2,20);
-  //   u8g2.print(keyArray[0],HEX); 
-  //   //u8g2.sendBuffer();          // transfer internal memory to the display
-  //   delay(3);
-  //   u8g2.setCursor(22,20);
-  //   u8g2.print(keyArray[1],HEX); 
-  //   //u8g2.sendBuffer();    
-  //   delay(3);
-  //   u8g2.setCursor(42,20);
-  //   u8g2.print(keyArray[2],HEX);
-
-
-  
-  // //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
-  // //char conversion. Would use pointers but causes headaches. 
-  
-  // std::string note = noteSelect(keyArray, stepSizes);
-  // for (int i = 0; i < note.size(); i++){
-  //   char a = note[i];
-  //   u8g2.setCursor(62 + i*5, 20);
-  //   u8g2.print(a); 
-  // }
-
-
-  //   Serial.println((currentStepSize >> 24) + 128);
-  //   u8g2.sendBuffer();  
-  //   delay(3);
-
-  //   //Toggle LED
-  //   digitalToggle(LED_BUILTIN);
-
-    
-    
-    
   }
 
 
