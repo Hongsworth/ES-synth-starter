@@ -10,8 +10,14 @@
   const int32_t base = (2^32);
   const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
    base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
-  
 
+
+//LAB2
+SemaphoreHandle_t keyArrayMutex;
+//global handle for a FreeRTOS mutex that can be used by different threads to access the mutex object:
+  
+//CAN
+volatile uint8_t TX_Message[8] = {0};
 
 //Pin definitions
   //Row select and enable
@@ -71,12 +77,20 @@ std::string toBinary(int n)
   if (n == 2){
     return "010";
   }
+
+  if (n == 3){
+    return "011";
+  }
+
+  if (n == 4){
+    return "100";
+  }
     
 }
 
 std::string noteSelect(const int32_t stepSizes[12]){
   for (int i =0; i < 3; i++){
-    
+
     if (keyArray[i] == 112){
       if (i == 0) {currentStepSize = stepSizes[0]; return "C";}
       if (i == 1) {currentStepSize = stepSizes[1]; return "E";}
@@ -97,6 +111,7 @@ std::string noteSelect(const int32_t stepSizes[12]){
       if (i == 1) {currentStepSize = stepSizes[10]; return "G";}
       if (i == 2) {currentStepSize = stepSizes[11]; return "B";}
     }
+    
   }
   currentStepSize = 0;
   return "No Note";
@@ -108,7 +123,7 @@ void setRow(uint8_t rowIdx){
   // parse the incoming value/ turn into binary, 
   std::string binaryIdx = toBinary(rowIdx);
 
-  int ra0, ra1, ra2; 
+  int ra0, ra1, ra2;; 
 
   ra0 = (binaryIdx[2] == '1') ? HIGH : LOW; //set values of ra pins 
   ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
@@ -142,18 +157,34 @@ void displayUpdateTask(void * param){
     u8g2.setCursor(2,20);
     //u8g2.print(count++);
 
+    xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
     u8g2.setCursor(2,20);
     u8g2.print(keyArray[0],HEX); 
     //u8g2.sendBuffer();          // transfer internal memory to the display
-
+    // xSemaphoreGive(keyArrayMutex);
+    // xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
     u8g2.setCursor(22,20);
     u8g2.print(keyArray[1],HEX); 
     //u8g2.sendBuffer();    
-    
+    // xSemaphoreGive(keyArrayMutex);
+    // xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
     u8g2.setCursor(42,20);
     u8g2.print(keyArray[2],HEX);
 
+    u8g2.setCursor(90,10);
+    u8g2.print(keyArray[3]);
 
+    xSemaphoreGive(keyArrayMutex);
+
+    
+    //u8g2.print((char) TX_Message[0]);
+    u8g2.drawStr(30,30,"Oct"); 
+    u8g2.setCursor(50,30);
+    u8g2.print(TX_Message[1]);
+
+    u8g2.drawStr(60,30,"LastKey:"); 
+    u8g2.setCursor(110,30);
+    u8g2.print(TX_Message[2]);
   
   //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
   //char conversion. Would use pointers but causes headaches. 
@@ -179,7 +210,7 @@ void displayUpdateTask(void * param){
 volatile uint32_t output = 0;
 
 void scanKeys(void * pvParameters){
-  const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
+  const TickType_t xFrequency = 10/portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   volatile int c0 = HIGH;
@@ -187,11 +218,19 @@ void scanKeys(void * pvParameters){
   volatile int c2 = HIGH;
   volatile int c3 = HIGH;
 
+  int8_t knob3Prev = 0;
+
+  int8_t conv;
+
+  int8_t keyNum=0;
+  
+  int change= 0;
 
   while(1){
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 5; i++)
   {
+    conv = 0;
     
     setRow(i);
 
@@ -203,24 +242,81 @@ void scanKeys(void * pvParameters){
     output = 0;
 
     //removed ternary ops
+    
 
     if (c0 == HIGH){
       output+=pow(2, 7);
-    }
+      
+      conv+=2;
+      }
+      else{
+        change = 1;
+      }
     if (c1 == HIGH){
       output+=pow(2, 6);
-    }
+   
+      conv+=1;
+      }
+      else{
+        change = 2;
+      }
     if (c2 == HIGH){
       output+=pow(2, 5);
+      
     }
+    else{
+        change = 3;
+      }
     if (c3 == HIGH){
       output+=pow(2, 4);
+      
     }
+    else{
+        change = 4;
+      }
 
-    delay(5);
-   
+  
+  
+
+    xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
+    if (i < 3)
+    {
+    if (output < keyArray[i]){ //check the previous vs the current state (output)
+    //need to check which key was pressed.
+    //to this effect we can find this based on the current row and the 
+    //calculated output value.
+    //i.e if output == F0, no keys
+    //output == 70 && i == 0 key pressed was the first (C)
+      
+
+      keyNum = i*4;
+      TX_Message[0] = 'P';
+      TX_Message[1] = 4; //octave
+      TX_Message[2] = keyNum + change;  //key num
+    }
     keyArray[i] = output;
+    }
+  
+     else if (i == 3){
+      if (knob3Prev == conv - 1)
+      {
+        //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
+        keyArray[i] += 1;
+        //xSemaphoreGive(keyArrayMutex);
+      }
+      else if (knob3Prev == conv + 1 ){
+        //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
+        keyArray[i] -= 1;
+        //xSemaphoreGive(keyArrayMutex);
+      }
+      
 
+      knob3Prev = conv;
+      }
+    xSemaphoreGive(keyArrayMutex);
+    
+    
+    
 
   }
   }
@@ -321,6 +417,9 @@ NULL,			/* Parameter passed into the task */
   //Initialise UART
   Serial.begin(9600);
   Serial.println("Hello World");
+
+  //MUTEX
+  keyArrayMutex = xSemaphoreCreateMutex();
 
   vTaskStartScheduler();
 }
