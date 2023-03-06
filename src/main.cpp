@@ -47,6 +47,74 @@ void setOutMuxBit(const uint8_t bitIdx, const bool value) {
       digitalWrite(REN_PIN,LOW);
 }
 
+std::string toBinary(int n)
+{
+   //only need these but a more elegant solution is preferred. 
+   //this is a brute force approach that is a placeholder for later (not a priority. )
+  if (n == 0)
+  {
+    return "000";
+  }
+  if (n == 1){
+    return "001";
+
+  }
+  if (n == 2){
+    return "010";
+  }
+
+  if (n == 3){
+    return "011";
+  }
+
+  if (n == 4){
+    return "100";
+  }
+    
+}
+
+
+
+void setRow(uint8_t rowIdx){
+  digitalWrite(REN_PIN, LOW);
+  std::string binaryIdx = toBinary(rowIdx);
+
+  int ra0, ra1, ra2;; 
+
+  ra0 = (binaryIdx[2] == '1') ? HIGH : LOW; //set values of ra pins 
+  ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
+  ra2 = (binaryIdx[0] == '1') ? HIGH : LOW;
+  
+  digitalWrite(RA0_PIN, ra0); //write ra pin values determined from ternary block.
+  digitalWrite(RA1_PIN, ra1);
+  digitalWrite(RA2_PIN, ra2);
+  digitalWrite(REN_PIN, HIGH); //write high at end.
+  
+}
+
+uint8_t readCols(){
+  digitalWrite(RA0_PIN, LOW);
+  digitalWrite(RA1_PIN, LOW);
+  digitalWrite(RA2_PIN, LOW);
+  digitalWrite(REN_PIN, HIGH);
+  
+
+
+  int C0 = digitalRead(C0_PIN);
+  int C1 = digitalRead(C1_PIN);
+  int C2 = digitalRead(C2_PIN);
+  int C3 = digitalRead(C3_PIN);
+
+  uint8_t output = 0;
+
+  output += (C0 == HIGH) ? pow(2,7) : 0;
+  output += (C1 == HIGH) ? pow(2,6) : 0;
+  output += (C2 == HIGH) ? pow(2,5) : 0;
+  output += (C3 == HIGH) ? pow(2,4) : 0;
+
+  return output;
+}
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -81,6 +149,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  uint8_t keys = readCols();
+  u8g2.setCursor(2,20);
   static uint32_t next = millis();
   static uint32_t count = 0;
 
@@ -90,9 +160,8 @@ void loop() {
     //Update display
     u8g2.clearBuffer();         // clear the internal memory
     u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
-    u8g2.drawStr(2,10,"Helllo World!");  // write something to the internal memory
-    u8g2.setCursor(2,20);
-    u8g2.print(count++);
+    u8g2.drawStr(2,10,"Hello World!");  // write something to the internal memory
+    u8g2.print(keys,HEX);
     u8g2.sendBuffer();          // transfer internal memory to the display
 
     //Toggle LED
