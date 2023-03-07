@@ -153,7 +153,7 @@ void displayUpdateTask(void * param){
     u8g2.clearBuffer();         // clear the internal memory
 
     u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
-    u8g2.drawStr(2,10,"Hello World!");  // write something to the internal memory
+    u8g2.drawStr(2,10,"Keyboard!");  // write something to the internal memory
     u8g2.setCursor(2,20);
     //u8g2.print(count++);
 
@@ -171,7 +171,8 @@ void displayUpdateTask(void * param){
     u8g2.setCursor(42,20);
     u8g2.print(keyArray[2],HEX);
 
-    u8g2.setCursor(90,10);
+    u8g2.drawStr(80,10,"Vol:");
+    u8g2.setCursor(110,10);
     u8g2.print(keyArray[3]);
 
     xSemaphoreGive(keyArrayMutex);
@@ -287,8 +288,7 @@ void scanKeys(void * pvParameters){
     //calculated output value.
     //i.e if output == F0, no keys
     //output == 70 && i == 0 key pressed was the first (C)
-      
-
+    
       keyNum = i*4;
       TX_Message[0] = 'P';
       TX_Message[1] = 4; //octave
@@ -298,27 +298,67 @@ void scanKeys(void * pvParameters){
     }
   
      else if (i == 3){
-      if (knob3Prev == conv - 1)
-      {
-        //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-        keyArray[i] += 1;
-        //xSemaphoreGive(keyArrayMutex);
-      }
-      else if (knob3Prev == conv + 1 ){
-        //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-        keyArray[i] -= 1;
-        //xSemaphoreGive(keyArrayMutex);
-      }
-      
+      // if (knob3Prev == conv - 1 || conv)
+      // {
+      //   //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
+      //   keyArray[i] += 1;
+      //   //xSemaphoreGive(keyArrayMutex);
+      // }
+      // else if (knob3Prev == conv + 1 ){
+      //   //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
+      //   keyArray[i] -= 1;
+      //   //xSemaphoreGive(keyArrayMutex);
+      // }
 
-      knob3Prev = conv;
+      //from 0: 
+
+
+
+    
+
+      if (knob3Prev == 0 && conv == 1){
+        knob3Prev = conv;
+        if (keyArray[i] > 0){keyArray[i]-= 1;}
+      }
+
+      else if (knob3Prev == 0 && conv == 2){
+        knob3Prev = conv;
+      }
+
+      else if (knob3Prev == 1 && conv == 0){
+        knob3Prev = conv;
+        if (keyArray[i] < 8){keyArray[i]+= 1;}
+      }
+
+      else if (knob3Prev == 1 && conv == 3){
+        knob3Prev = conv;
+      }
+
+      else if (knob3Prev == 2 && conv == 3){
+        knob3Prev = conv;
+        if (keyArray[i] < 8){keyArray[i]+= 1;}
+       
+      }
+
+      else if (knob3Prev == 2 && conv == 0){
+        knob3Prev = conv;
+      }
+
+  
+      else if (knob3Prev == 3 && conv == 2){
+        knob3Prev = conv;
+        if (keyArray[i] >0){keyArray[i]-= 1;}
+      }
+
+      else if (knob3Prev == 3 && conv == 1){
+        knob3Prev = conv;
+      }
+
+
+      //knob3Prev = conv;
       }
     xSemaphoreGive(keyArrayMutex);
-    
-    
-    
-
-  }
+    }
   }
 
 }
@@ -354,8 +394,10 @@ void sampleISR() {
   static int32_t phaseAcc = 0;
   phaseAcc += currentStepSize;
 
-  int32_t Vout = phaseAcc >> 24; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
+  int32_t Vout = (phaseAcc >> 24) - 128; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
   // volume is louder the closer to 12.
+
+  Vout = Vout >> (8 - keyArray[3]);
 
   analogWrite(OUTR_PIN, Vout + 128);
 }
