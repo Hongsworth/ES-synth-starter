@@ -6,7 +6,7 @@
   const uint32_t interval = 100; //Display update interval
 
   volatile int32_t currentStepSize;
-  volatile int32_t keyArray[7];
+  volatile int32_t keyArray[7];  // has 7 rows
   const int32_t base = (2^32);
   const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
    base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
