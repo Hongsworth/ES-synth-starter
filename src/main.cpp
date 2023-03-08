@@ -401,8 +401,8 @@ uint8_t readCols(uint8_t row){
 
 }
 
-void sampleISR() {
-  static uint32_t phaseAcc = 0;
+void sampleISR() { // so this is added because the key is only shown up on the display but doesn't give audio output, thats where this function comes in.
+  static uint32_t phaseAcc = 0; //so this being static means that it is only initialised at the start of the program.
   phaseAcc += currentStepSize*22000;
   
 
