@@ -2,6 +2,7 @@
 #include <U8g2lib.h>
 #include <STM32FreeRTOS.h>
 #include <cmath>
+#include <ES_CAN.h>
 
 //Constants
   const uint32_t interval = 100; //Display update interval
@@ -26,7 +27,7 @@ SemaphoreHandle_t keyArrayMutex;
 //global handle for a FreeRTOS mutex that can be used by different threads to access the mutex object:
   
 //CAN
-volatile uint8_t TX_Message[8] = {0};
+uint8_t TX_Message[8] = {0};
 
 //Pin definitions
   //Row select and enable
@@ -160,6 +161,9 @@ void displayUpdateTask(void * param){
   const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
+    uint32_t ID;
+    uint8_t RX_Message[8] = {0};
+
   while(1){
     vTaskDelayUntil( &xLastWakeTime, xFrequency);
     //Update display
@@ -191,14 +195,18 @@ void displayUpdateTask(void * param){
     xSemaphoreGive(keyArrayMutex);
 
     
+    while (CAN_CheckRXLevel())
+	    CAN_RX(ID, RX_Message);
+
+    
     //u8g2.print((char) TX_Message[0]);
     u8g2.drawStr(30,30,"Oct"); 
     u8g2.setCursor(50,30);
-    u8g2.print(TX_Message[1]);
+    u8g2.print(RX_Message[1]);
 
     u8g2.drawStr(60,30,"LastKey:"); 
     u8g2.setCursor(110,30);
-    u8g2.print(TX_Message[2]);
+    u8g2.print(RX_Message[2]);
   
   //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
   //char conversion. Would use pointers but causes headaches. 
@@ -213,6 +221,7 @@ void displayUpdateTask(void * param){
 
     //Serial.println((currentStepSize >> 24) + 128);
     u8g2.sendBuffer();  
+    
  
 
     //Toggle LED
@@ -306,6 +315,7 @@ void scanKeys(void * pvParameters){
       TX_Message[0] = 'P';
       TX_Message[1] = 4; //octave
       TX_Message[2] = keyNum + change;  //key num
+      CAN_TX(0x123, TX_Message);
     }
     keyArray[i] = output;
     }
@@ -409,6 +419,10 @@ void setup() {
   sampleTimer->setOverflow(22000, HERTZ_FORMAT);
   sampleTimer->attachInterrupt(sampleISR);
   sampleTimer->resume();
+
+  CAN_Init(true);
+  setCANFilter(0x123,0x7ff);
+  CAN_Start();
 
   //Set pin directions
   pinMode(RA0_PIN, OUTPUT);
