@@ -14,20 +14,24 @@
    base* 466, base*  277, base* 349, base * 440, base* 311, base* 392, base* 493};
 
 
+  uint8_t RX_Message[8] = {0};
+
    float rootRet(int power) //return a power of the root of 12
 {
   return pow(2, power/12);
 }
 
 
-  
+    
 
 //LAB2
 SemaphoreHandle_t keyArrayMutex;
 //global handle for a FreeRTOS mutex that can be used by different threads to access the mutex object:
   
 //CAN
-uint8_t TX_Message[8] = {0};
+
+
+QueueHandle_t msgInQ;
 
 //Pin definitions
   //Row select and enable
@@ -70,6 +74,13 @@ void setOutMuxBit(const uint8_t bitIdx, const bool value) {
       digitalWrite(REN_PIN,HIGH);
       delayMicroseconds(2);
       digitalWrite(REN_PIN,LOW);
+}
+
+void CAN_RX_ISR (void) {
+	uint8_t RX_Message_ISR[8];
+	uint32_t ID;
+	CAN_RX(ID, RX_Message_ISR);
+	xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
 }
 
 std::string toBinary(int n)
@@ -162,7 +173,7 @@ void displayUpdateTask(void * param){
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
     uint32_t ID;
-    uint8_t RX_Message[8] = {0};
+    
 
   while(1){
     vTaskDelayUntil( &xLastWakeTime, xFrequency);
@@ -196,7 +207,7 @@ void displayUpdateTask(void * param){
 
     
     while (CAN_CheckRXLevel())
-	    CAN_RX(ID, RX_Message);
+	    //CAN_RX(ID, RX_Message);
 
     
     //u8g2.print((char) TX_Message[0]);
@@ -248,6 +259,11 @@ void scanKeys(void * pvParameters){
   int8_t keyNum=0;
   
   int change= 0;
+
+  uint8_t TX_Message[8] = {0};
+
+
+
 
   while(1){
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -317,6 +333,14 @@ void scanKeys(void * pvParameters){
       TX_Message[2] = keyNum + change;  //key num
       CAN_TX(0x123, TX_Message);
     }
+    if (output > keyArray[i]){
+      keyNum = i*4;
+      TX_Message[0] = 'R';
+      TX_Message[1] = 4; //octave
+      TX_Message[2] = keyNum + change;  //key num
+      CAN_TX(0x123, TX_Message);
+    }
+
     keyArray[i] = output;
     }
   
@@ -408,6 +432,30 @@ void sampleISR() { // so this is added because the key is only shown up on the d
   //analogWrite(OUTR_PIN, 140);
 }
 
+void decodeTask(void * param){
+  Serial.begin(9600);
+
+
+  while(1){
+    xQueueReceive(msgInQ, RX_Message, portMAX_DELAY);
+    //Serial.println(char(RX_Message[0]));
+    
+      if (char(RX_Message[0]) == 'R'){
+        currentStepSize = 0;
+      }
+
+      if (char(RX_Message[0]) == 'P'){
+        int keyNum = RX_Message[2];
+        int octave = RX_Message[1];
+        currentStepSize = stepSizes[keyNum];
+        currentStepSize *= pow(2, octave - 4);
+      }
+
+
+  }
+
+}
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -421,8 +469,13 @@ void setup() {
   sampleTimer->resume();
 
   CAN_Init(true);
+  CAN_RegisterRX_ISR(CAN_RX_ISR);
   setCANFilter(0x123,0x7ff);
   CAN_Start();
+
+  //CAN part 3
+
+  msgInQ = xQueueCreate(36,8);
 
   //Set pin directions
   pinMode(RA0_PIN, OUTPUT);
@@ -468,6 +521,15 @@ NULL,			/* Parameter passed into the task */
 1,			/* Task priority */
 &displayUpdateHandle );  /* Pointer to store the task handle */
 
+TaskHandle_t decodeHandle= NULL;
+  xTaskCreate(
+decodeTask,		/* Function that implements the task */
+"decode",		/* Text name for the task */
+64,      		/* Stack size in words, not bytes */
+NULL,			/* Parameter passed into the task */
+3,			/* Task priority */
+&decodeHandle ); 
+
   //Initialise UART
   Serial.begin(9600);
   Serial.println("Hello World");
@@ -484,7 +546,7 @@ NULL,			/* Parameter passed into the task */
 
 void loop() {
 
-    Serial.println(currentStepSize);
+    //Serial.println(currentStepSize);
   }
 
 
