@@ -1,15 +1,16 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include <STM32FreeRTOS.h>
+#include <cmath>
 
 //Constants
   const uint32_t interval = 100; //Display update interval
 
   volatile uint32_t currentStepSize;
   volatile int32_t keyArray[7];  // has 7 rows
-  const uint32_t base = (2^32);
-  uint32_t stepSizes[12] = {base * 278, base * 293, base * 311, base *330, base *349,
-   base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
+  const uint32_t base = pow(2, 32)/22000;
+  uint32_t stepSizes[12] = {base * 293, base * 311, base * 330, base *349, base *369,
+   base* 391, base*415, base*440, base * 466, base*493, base*523, base*559};
 
 
    float rootRet(int power) //return a power of the root of 12
@@ -310,24 +311,6 @@ void scanKeys(void * pvParameters){
     }
   
      else if (i == 3){
-      // if (knob3Prev == conv - 1 || conv)
-      // {
-      //   //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-      //   keyArray[i] += 1;
-      //   //xSemaphoreGive(keyArrayMutex);
-      // }
-      // else if (knob3Prev == conv + 1 ){
-      //   //xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-      //   keyArray[i] -= 1;
-      //   //xSemaphoreGive(keyArrayMutex);
-      // }
-
-      //from 0: 
-
-
-
-    
-
       if (knob3Prev == 0 && conv == 1){
         knob3Prev = conv;
         if (keyArray[i] > 0){keyArray[i]-= 1;}
@@ -403,7 +386,7 @@ uint8_t readCols(uint8_t row){
 
 void sampleISR() { // so this is added because the key is only shown up on the display but doesn't give audio output, thats where this function comes in.
   static uint32_t phaseAcc = 0; //so this being static means that it is only initialised at the start of the program.
-  phaseAcc += currentStepSize*22000;
+  phaseAcc += currentStepSize;
   
 
   int32_t Vout = (phaseAcc >> 24) - 128; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
