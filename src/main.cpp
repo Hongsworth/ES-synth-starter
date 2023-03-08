@@ -9,8 +9,8 @@
   volatile uint32_t currentStepSize;
   volatile int32_t keyArray[7];  // has 7 rows
   const uint32_t base = pow(2, 32)/22000;
-  uint32_t stepSizes[12] = {base * 293, base * 311, base * 330, base *349, base *369,
-   base* 391, base*415, base*440, base * 466, base*493, base*523, base*559};
+  uint32_t stepSizes[12] = {base * 261, base * 329, base * 415, base * 293, base * 370,
+   base* 466, base*  277, base* 349, base * 440, base* 311, base* 392, base* 493};
 
 
    float rootRet(int power) //return a power of the root of 12
