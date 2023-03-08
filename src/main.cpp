@@ -92,7 +92,11 @@ void setRow(uint8_t rowIdx){
   
 }
 
-uint8_t readCols(){
+uint8_t readCols(int8_t row){
+
+
+  setRow(row);
+
   digitalWrite(RA0_PIN, LOW);
   digitalWrite(RA1_PIN, LOW);
   digitalWrite(RA2_PIN, LOW);
