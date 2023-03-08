@@ -93,30 +93,28 @@ void setRow(uint8_t rowIdx){
 }
 
 uint8_t readCols(int8_t row){
-
-
-  setRow(row);
-
-  digitalWrite(RA0_PIN, LOW);
-  digitalWrite(RA1_PIN, LOW);
-  digitalWrite(RA2_PIN, LOW);
-  digitalWrite(REN_PIN, HIGH);
   
+  setRow(row);
+  
+  delay(0.5);
 
+  int c0 = digitalRead(C0_PIN);
+  int c1 = digitalRead(C1_PIN);
+  int c2 = digitalRead(C2_PIN);
+  int c3 = digitalRead(C3_PIN);
 
-  int C0 = digitalRead(C0_PIN);
-  int C1 = digitalRead(C1_PIN);
-  int C2 = digitalRead(C2_PIN);
-  int C3 = digitalRead(C3_PIN);
+  //LOW WHEN PRESSED
+  
+  std::string out = "";
+  uint8_t output;
 
-  uint8_t output = 0;
-
-  output += (C0 == HIGH) ? pow(2,7) : 0;
-  output += (C1 == HIGH) ? pow(2,6) : 0;
-  output += (C2 == HIGH) ? pow(2,5) : 0;
-  output += (C3 == HIGH) ? pow(2,4) : 0;
+  output += (c0 == HIGH)?  pow(2, 7): 0; 
+  output += (c1 == HIGH)?  pow(2, 6): 0; 
+  output += (c2 == HIGH)?  pow(2, 5): 0; 
+  output += (c3 == HIGH)?  pow(2, 4): 0; 
 
   return output;
+
 }
 
 void setup() {
