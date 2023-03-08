@@ -5,12 +5,20 @@
 //Constants
   const uint32_t interval = 100; //Display update interval
 
-  volatile int32_t currentStepSize;
+  volatile uint32_t currentStepSize;
   volatile int32_t keyArray[7];  // has 7 rows
-  const int32_t base = (2^32);
-  const int32_t stepSizes[12] = {base * 277, base * 293, base * 311, base *330, base *349,
+  const uint32_t base = (2^32);
+  uint32_t stepSizes[12] = {base * 278, base * 293, base * 311, base *330, base *349,
    base* 369, base*391, base*415, base * 440, base*466, base*493, base*523};
 
+
+   float rootRet(int power) //return a power of the root of 12
+{
+  return pow(2, power/12);
+}
+
+
+  
 
 //LAB2
 SemaphoreHandle_t keyArrayMutex;
@@ -85,10 +93,14 @@ std::string toBinary(int n)
   if (n == 4){
     return "100";
   }
+
+  if (n == 5){
+    return "101";
+  }
     
 }
 
-std::string noteSelect(const int32_t stepSizes[12]){
+std::string noteSelect(){
   for (int i =0; i < 3; i++){
 
     if (keyArray[i] == 112){
@@ -190,7 +202,7 @@ void displayUpdateTask(void * param){
   //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
   //char conversion. Would use pointers but causes headaches. 
   
-  std::string note = noteSelect(stepSizes);
+  std::string note = noteSelect();
   for (int i = 0; i < note.size(); i++){
     char a = note[i];
     u8g2.setCursor(62 + i*5, 20);
@@ -229,7 +241,7 @@ void scanKeys(void * pvParameters){
 
   while(1){
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
   {
     conv = 0;
     
@@ -344,7 +356,6 @@ void scanKeys(void * pvParameters){
         knob3Prev = conv;
       }
 
-  
       else if (knob3Prev == 3 && conv == 2){
         knob3Prev = conv;
         if (keyArray[i] >0){keyArray[i]-= 1;}
@@ -391,8 +402,9 @@ uint8_t readCols(uint8_t row){
 }
 
 void sampleISR() {
-  static int32_t phaseAcc = 0;
-  phaseAcc += currentStepSize;
+  static uint32_t phaseAcc = 0;
+  phaseAcc += currentStepSize*22000;
+  
 
   int32_t Vout = (phaseAcc >> 24) - 128; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
   // volume is louder the closer to 12.
@@ -400,10 +412,13 @@ void sampleISR() {
   Vout = Vout >> (8 - keyArray[3]);
 
   analogWrite(OUTR_PIN, Vout + 128);
+  //analogWrite(OUTR_PIN, 140);
 }
 
 void setup() {
   // put your setup code here, to run once:
+
+  //alterSetup(); //changes the step functions
 
   TIM_TypeDef *Instance = TIM1;
   HardwareTimer *sampleTimer = new HardwareTimer(Instance);
@@ -468,13 +483,11 @@ NULL,			/* Parameter passed into the task */
 
 
 
-float rootRet(int power) //return a power of the root of 12
-{
-  return pow(2, power/12);
-}
+
 
 void loop() {
-  
+
+    Serial.println(currentStepSize);
   }
 
 
