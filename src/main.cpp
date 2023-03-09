@@ -15,22 +15,17 @@
 
 
   uint8_t RX_Message[8] = {0};
-
+//useless, should remove.
    float rootRet(int power) //return a power of the root of 12
 {
   return pow(2, power/12);
 }
-
-
-    
 
 //LAB2
 SemaphoreHandle_t keyArrayMutex;
 //global handle for a FreeRTOS mutex that can be used by different threads to access the mutex object:
   
 //CAN
-
-
 QueueHandle_t msgInQ;
 
 //Pin definitions
@@ -87,13 +82,11 @@ std::string toBinary(int n)
 {
    //only need these but a more elegant solution is preferred. 
    //this is a brute force approach that is a placeholder for later (not a priority. )
-  if (n == 0)
-  {
+  if (n == 0){
     return "000";
   }
   if (n == 1){
     return "001";
-
   }
   if (n == 2){
     return "010";
@@ -228,6 +221,8 @@ void displayUpdateTask(void * param){
     u8g2.setCursor(62 + i*5, 20);
     u8g2.print(a); 
   }
+  
+
 
 
     //Serial.println((currentStepSize >> 24) + 128);
@@ -253,6 +248,7 @@ void scanKeys(void * pvParameters){
   volatile int c3 = HIGH;
 
   int8_t knob3Prev = 0;
+  int8_t knob4Prev = 0;
 
   int8_t conv;
 
@@ -285,7 +281,6 @@ void scanKeys(void * pvParameters){
 
     if (c0 == HIGH){
       output+=pow(2, 7);
-      
       conv+=2;
       }
       else{
@@ -293,7 +288,6 @@ void scanKeys(void * pvParameters){
       }
     if (c1 == HIGH){
       output+=pow(2, 6);
-   
       conv+=1;
       }
       else{
@@ -385,6 +379,48 @@ void scanKeys(void * pvParameters){
 
       //knob3Prev = conv;
       }
+      //for changing the wave type! //0 will be sawtooth for example. 
+      else if (i == 4){
+      if (knob4Prev == 0 && conv == 1){
+        knob4Prev = conv;
+        if (keyArray[i] > 0){keyArray[i]-= 1;}
+      }
+
+      else if (knob4Prev == 0 && conv == 2){
+        knob4Prev = conv;
+      }
+
+      else if (knob4Prev == 1 && conv == 0){
+        knob4Prev = conv;
+        if (keyArray[i] < 8){keyArray[i]+= 1;}
+      }
+
+      else if (knob4Prev == 1 && conv == 3){
+        knob4Prev = conv;
+      }
+
+      else if (knob4Prev == 2 && conv == 3){
+        knob4Prev = conv;
+        if (keyArray[i] < 8){keyArray[i]+= 1;}
+       
+      }
+
+      else if (knob4Prev == 2 && conv == 0){
+        knob4Prev = conv;
+      }
+
+      else if (knob4Prev == 3 && conv == 2){
+        knob4Prev = conv;
+        if (keyArray[i] >0){keyArray[i]-= 1;}
+      }
+
+      else if (knob4Prev == 3 && conv == 1){
+        knob4Prev = conv;
+      }
+
+
+      //knob3Prev = conv;
+      }
     xSemaphoreGive(keyArrayMutex);
     }
   }
@@ -420,7 +456,34 @@ uint8_t readCols(uint8_t row){
 
 void sampleISR() { // so this is added because the key is only shown up on the display but doesn't give audio output, thats where this function comes in.
   static uint32_t phaseAcc = 0; //so this being static means that it is only initialised at the start of the program.
-  phaseAcc += currentStepSize;
+  //This is for the sawtooth function
+  //It generates a linear line. 
+  if (keyArray[4] == 0)
+  {
+    phaseAcc += currentStepSize;
+  }
+  else if (keyArray[4] == 1)
+  {
+    phaseAcc += pow(2, 32)* sin(currentStepSize/pow(2, 32) * 2 * 3.1415 * millis());
+  }
+
+  //sine Wave:
+ //
+ //sine wave of frequency a. 
+
+ //Triangle wave: 
+ //set mode: up or down
+
+ //UP
+ //phaseAcc += currentStepSize
+
+ //DOWN
+ //phaseAcc -= currentStepSize
+
+
+  //Square wave: 
+  //phaseAcc = currentStepSize ? not sure. 
+ 
   
 
   int32_t Vout = (phaseAcc >> 24) - 128; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
@@ -454,6 +517,30 @@ void decodeTask(void * param){
 
   }
 
+}
+
+void drawRect(int x, int y, int height, int width){
+  for (int i = x; i < x+width; i++){
+    for (int j = y; j < y+height; j++){
+      u8g2.drawPixel(i, j);
+    }
+  }
+}
+
+
+
+void onStart(){ //A short demo function that does nothing. 
+  u8g2.clearBuffer(); 
+
+  drawRect(5, 5, 10, 100);
+  drawRect(5, 25, 10, 100);
+
+  u8g2.sendBuffer(); 
+}
+
+void selectSong(){
+  //initialise some features to play a specific song? TBD
+  //list of options as a UI interface?
 }
 
 void setup() {
@@ -502,6 +589,10 @@ void setup() {
   setOutMuxBit(DEN_BIT, HIGH);  //Enable display power supply
 
 
+  // while(millis() < 10000){ //does onstart
+  //   onStart();
+  // }
+
 
   TaskHandle_t scanKeysHandle = NULL;
   xTaskCreate(
@@ -540,13 +631,7 @@ NULL,			/* Parameter passed into the task */
   vTaskStartScheduler();
 }
 
-
-
-
-
 void loop() {
-
-    //Serial.println(currentStepSize);
   }
 
 
