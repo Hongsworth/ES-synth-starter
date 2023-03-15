@@ -113,38 +113,7 @@ std::string toBinary(int n)
     
 }
 
-std::string noteShow(){
 
-
-  for (int i =0; i < 3; i++){
-
-      if (keyArray[i] == 112){
-        if (i == 0) {return "C";}
-        if (i == 1) {return "E";}
-        if (i == 2) {return "G#";}
-      }
-      if (keyArray[i] == 208){
-        if (i == 0) {return "D";}
-        if (i == 1) {return "F#";}
-        if (i == 2) {return "A#";}
-      }
-      if (keyArray[i] == 176){
-        if (i == 0) {return "C#";}
-        if (i == 1) {return "F";}
-        if (i == 2) {return "A";}
-      }
-      if (keyArray[i] == 224){
-        if (i == 0) {return "D#";}
-        if (i == 1) {return "G";}
-        if (i == 2) {return "B";}
-      }
-
-  }
-
-  return "No Note";
-
-
-}
 
 std::string noteSelect(){
 
@@ -190,67 +159,6 @@ std::string noteSelect(){
   return "No Note";
 }
 
-void noteSelectBlank(){ //new version with no returns for use in a faster function like scanKeys
-
-
-  for (int i =0; i < 3; i++){
-
-    if (keyArray[4] == 0){
-
-      if (keyArray[i] == 112){
-        if (i == 0) {currentStepSize = stepSizes[0];}
-        if (i == 1) {currentStepSize = stepSizes[1];}
-        if (i == 2) {currentStepSize = stepSizes[2];}
-      }
-      if (keyArray[i] == 208){
-        if (i == 0) {currentStepSize = stepSizes[3]; }
-        if (i == 1) {currentStepSize = stepSizes[4]; }
-        if (i == 2) {currentStepSize = stepSizes[5]; }
-      }
-      if (keyArray[i] == 176){
-        if (i == 0) {currentStepSize = stepSizes[6]; }
-        if (i == 1) {currentStepSize = stepSizes[7]; }
-        if (i == 2) {currentStepSize = stepSizes[8];}
-      }
-      if (keyArray[i] == 224){
-        if (i == 0) {currentStepSize = stepSizes[9]; }
-        if (i == 1) {currentStepSize = stepSizes[10]; }
-        if (i == 2) {currentStepSize =stepSizes[11]; }
-      }
-
-    }
-
-    if (keyArray[4] == 1){
-
-      if (keyArray[i] == 112){
-        if (i == 0) {currentStepSize = pow (2, 32) * sin(2*3.1415* 262* millis()/1000);}//pow(2, 31) - (pow(2, 32)/(2*3.1415*262)) * cos((2*3.1415*262)*millis()/1000);}
-        if (i == 1) {currentStepSize = stepSizes[1]; }
-        if (i == 2) {currentStepSize = stepSizes[2]; }
-      }
-      if (keyArray[i] == 208){
-        if (i == 0) {currentStepSize = stepSizes[3];}
-        if (i == 1) {currentStepSize = stepSizes[4];}
-        if (i == 2) {currentStepSize = stepSizes[5]; }
-      }
-      if (keyArray[i] == 176){
-        if (i == 0) {currentStepSize = stepSizes[6];}
-        if (i == 1) {currentStepSize = stepSizes[7]; }
-        if (i == 2) {currentStepSize = stepSizes[8];}
-      }
-      if (keyArray[i] == 224){
-        if (i == 0) {currentStepSize = stepSizes[9]; }
-        if (i == 1) {currentStepSize = stepSizes[10]; }
-        if (i == 2) {currentStepSize =stepSizes[11]; }
-      }
-
-    }
-      
-  }
-
-
-  currentStepSize = 0;
-  
-}
 
 void setRow(uint8_t rowIdx){
 
