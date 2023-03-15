@@ -7,11 +7,18 @@
 //Constants
   const uint32_t interval = 100; //Display update interval
 
-  volatile uint32_t currentStepSize;
+
+  volatile uint8_t currentKey=0;
+  volatile uint32_t currentFreq;
+  volatile uint32_t currentPeriod;
+  volatile int32_t currentStepSize;
   volatile int32_t keyArray[7];  // has 7 rows
   const uint32_t base = pow(2, 32)/22000;
   uint32_t stepSizes[12] = {base * 261, base * 329, base * 415, base * 293, base * 370,
    base* 466, base*  277, base* 349, base * 440, base* 311, base* 392, base* 493};
+
+   const uint32_t periods[12] = {22000/261, 22000/329, 22000/415, 22000/293, 22000/370, 
+   22000/466, 22000/277, 22000/349, 22000/440, 22000/311, 22000/392, 22000/493};
 
 
   uint8_t RX_Message[8] = {0};
@@ -106,33 +113,143 @@ std::string toBinary(int n)
     
 }
 
-std::string noteSelect(){
+std::string noteShow(){
+
+
   for (int i =0; i < 3; i++){
 
-    if (keyArray[i] == 112){
-      if (i == 0) {currentStepSize = stepSizes[0]; return "C";}
-      if (i == 1) {currentStepSize = stepSizes[1]; return "E";}
-      if (i == 2) {currentStepSize = stepSizes[2]; return "G#";}
-    }
-    if (keyArray[i] == 208){
-      if (i == 0) {currentStepSize = stepSizes[3]; return "D";}
-      if (i == 1) {currentStepSize = stepSizes[4]; return "F#";}
-      if (i == 2) {currentStepSize = stepSizes[5]; return "A#";}
-    }
-    if (keyArray[i] == 176){
-      if (i == 0) {currentStepSize = stepSizes[6]; return "C#";}
-      if (i == 1) {currentStepSize = stepSizes[7]; return "F";}
-      if (i == 2) {currentStepSize = stepSizes[8]; return "A";}
-    }
-    if (keyArray[i] == 224){
-      if (i == 0) {currentStepSize = stepSizes[9]; return "D#";}
-      if (i == 1) {currentStepSize = stepSizes[10]; return "G";}
-      if (i == 2) {currentStepSize = stepSizes[11]; return "B";}
-    }
-    
+      if (keyArray[i] == 112){
+        if (i == 0) {return "C";}
+        if (i == 1) {return "E";}
+        if (i == 2) {return "G#";}
+      }
+      if (keyArray[i] == 208){
+        if (i == 0) {return "D";}
+        if (i == 1) {return "F#";}
+        if (i == 2) {return "A#";}
+      }
+      if (keyArray[i] == 176){
+        if (i == 0) {return "C#";}
+        if (i == 1) {return "F";}
+        if (i == 2) {return "A";}
+      }
+      if (keyArray[i] == 224){
+        if (i == 0) {return "D#";}
+        if (i == 1) {return "G";}
+        if (i == 2) {return "B";}
+      }
+
   }
+
+  return "No Note";
+
+
+}
+
+std::string noteSelect(){
+
+  for (int i =0; i < 3; i++){
+
+    //if (keyArray[4] == 0){
+
+      if (keyArray[i] == 112){
+        if (i == 0) {currentKey = 0; currentStepSize = stepSizes[0]; return "C";}
+        if (i == 1) {currentKey = 1; currentStepSize = stepSizes[1]; return "E";}
+        if (i == 2) {currentKey = 2; currentStepSize = stepSizes[2]; return "G#";}
+
+        
+      }
+      if (keyArray[i] == 208){
+        if (i == 0) {currentKey = 3;currentStepSize = stepSizes[3]; return "D";}
+        if (i == 1) {currentKey = 4;currentStepSize = stepSizes[4]; return "F#";}
+        if (i == 2) {currentKey = 5;currentStepSize = stepSizes[5]; return "A#";}
+
+        
+      }
+      if (keyArray[i] == 176){
+        if (i == 0) {currentKey = 6;currentStepSize = stepSizes[6]; return "C#";}
+        if (i == 1) {currentKey = 7;currentStepSize = stepSizes[7]; return "F";}
+        if (i == 2) {currentKey = 8;currentStepSize = stepSizes[8]; return "A";}
+
+        
+      }
+      if (keyArray[i] == 224){
+        if (i == 0) {currentKey = 9;currentStepSize = stepSizes[9]; return "D#";}
+        if (i == 1) {currentKey = 10;currentStepSize = stepSizes[10]; return "G";}
+        if (i == 2) {currentKey = 11;currentStepSize =stepSizes[11]; return "B";}
+
+        //currentKey = 4*i;
+      }
+
+    
+      
+  }
+
+
   currentStepSize = 0;
   return "No Note";
+}
+
+void noteSelectBlank(){ //new version with no returns for use in a faster function like scanKeys
+
+
+  for (int i =0; i < 3; i++){
+
+    if (keyArray[4] == 0){
+
+      if (keyArray[i] == 112){
+        if (i == 0) {currentStepSize = stepSizes[0];}
+        if (i == 1) {currentStepSize = stepSizes[1];}
+        if (i == 2) {currentStepSize = stepSizes[2];}
+      }
+      if (keyArray[i] == 208){
+        if (i == 0) {currentStepSize = stepSizes[3]; }
+        if (i == 1) {currentStepSize = stepSizes[4]; }
+        if (i == 2) {currentStepSize = stepSizes[5]; }
+      }
+      if (keyArray[i] == 176){
+        if (i == 0) {currentStepSize = stepSizes[6]; }
+        if (i == 1) {currentStepSize = stepSizes[7]; }
+        if (i == 2) {currentStepSize = stepSizes[8];}
+      }
+      if (keyArray[i] == 224){
+        if (i == 0) {currentStepSize = stepSizes[9]; }
+        if (i == 1) {currentStepSize = stepSizes[10]; }
+        if (i == 2) {currentStepSize =stepSizes[11]; }
+      }
+
+    }
+
+    if (keyArray[4] == 1){
+
+      if (keyArray[i] == 112){
+        if (i == 0) {currentStepSize = pow (2, 32) * sin(2*3.1415* 262* millis()/1000);}//pow(2, 31) - (pow(2, 32)/(2*3.1415*262)) * cos((2*3.1415*262)*millis()/1000);}
+        if (i == 1) {currentStepSize = stepSizes[1]; }
+        if (i == 2) {currentStepSize = stepSizes[2]; }
+      }
+      if (keyArray[i] == 208){
+        if (i == 0) {currentStepSize = stepSizes[3];}
+        if (i == 1) {currentStepSize = stepSizes[4];}
+        if (i == 2) {currentStepSize = stepSizes[5]; }
+      }
+      if (keyArray[i] == 176){
+        if (i == 0) {currentStepSize = stepSizes[6];}
+        if (i == 1) {currentStepSize = stepSizes[7]; }
+        if (i == 2) {currentStepSize = stepSizes[8];}
+      }
+      if (keyArray[i] == 224){
+        if (i == 0) {currentStepSize = stepSizes[9]; }
+        if (i == 1) {currentStepSize = stepSizes[10]; }
+        if (i == 2) {currentStepSize =stepSizes[11]; }
+      }
+
+    }
+      
+  }
+
+
+  currentStepSize = 0;
+  
 }
 
 void setRow(uint8_t rowIdx){
@@ -141,11 +258,18 @@ void setRow(uint8_t rowIdx){
   // parse the incoming value/ turn into binary, 
   std::string binaryIdx = toBinary(rowIdx);
 
-  int ra0, ra1, ra2;; 
+  int ra0, ra1, ra2 = LOW;
 
-  ra0 = (binaryIdx[2] == '1') ? HIGH : LOW; //set values of ra pins 
-  ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
-  ra2 = (binaryIdx[0] == '1') ? HIGH : LOW;
+  // ra0 = (binaryIdx[2] == '1') ? HIGH : LOW; //set values of ra pins 
+  // ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
+  // ra2 = (binaryIdx[0] == '1') ? HIGH : LOW;
+
+  if (binaryIdx[2] == '1') {ra0 = HIGH;}
+  else {ra0 = LOW;}
+  if (binaryIdx[1] == '1') {ra1 = HIGH;}
+  else {ra1 = LOW;}
+  if (binaryIdx[0] == '1') {ra2 = HIGH;}
+  else {ra2 = LOW;}
 
   // (binaryIdx[0] == '1') ? Serial.print("1"): Serial.print("0");
   // (binaryIdx[1] == '1') ? Serial.print("1"): Serial.print("0");
@@ -196,6 +320,11 @@ void displayUpdateTask(void * param){
     u8g2.setCursor(110,10);
     u8g2.print(keyArray[3]);
 
+    u8g2.drawStr(2,30,"Wave:");
+    u8g2.setCursor(30,30);
+    u8g2.print(keyArray[4]);
+
+
     xSemaphoreGive(keyArrayMutex);
 
     
@@ -222,7 +351,8 @@ void displayUpdateTask(void * param){
     u8g2.print(a); 
   }
   
-
+  currentFreq = 22000*(currentStepSize>>32);
+  currentPeriod = periods[currentKey];
 
 
     //Serial.println((currentStepSize >> 24) + 128);
@@ -239,7 +369,7 @@ void displayUpdateTask(void * param){
 volatile uint32_t output = 0;
 
 void scanKeys(void * pvParameters){
-  const TickType_t xFrequency = 10/portTICK_PERIOD_MS;
+  const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   volatile int c0 = HIGH;
@@ -308,7 +438,7 @@ void scanKeys(void * pvParameters){
         change = 4;
       }
 
-  
+
   
 
     xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
@@ -331,8 +461,8 @@ void scanKeys(void * pvParameters){
       keyNum = i*4;
       TX_Message[0] = 'R';
       TX_Message[1] = 4; //octave
-      TX_Message[2] = keyNum + change;  //key num
-      CAN_TX(0x123, TX_Message);
+      //TX_Message[2] = keyNum + change;  //key num
+      CAN_TX(0x123, TX_Message); //DO NOT UPDATE KEY PRESSED HERE!!!
     }
 
     keyArray[i] = output;
@@ -377,7 +507,49 @@ void scanKeys(void * pvParameters){
       }
 
 
-      //knob3Prev = conv;
+     
+      }
+
+      else if (i == 4){
+      if (knob4Prev == 0 && conv == 1){
+        knob4Prev = conv;
+        if (keyArray[i] > 0){keyArray[i]-= 1;}
+      }
+
+      else if (knob4Prev == 0 && conv == 2){
+        knob4Prev = conv;
+      }
+
+      else if (knob4Prev == 1 && conv == 0){
+        knob4Prev = conv;
+        if (keyArray[i] < 8){keyArray[i]+= 1;}
+      }
+
+      else if (knob4Prev == 1 && conv == 3){
+        knob4Prev = conv;
+      }
+
+      else if (knob4Prev == 2 && conv == 3){
+        knob4Prev = conv;
+        if (keyArray[i] < 8){keyArray[i]+= 1;}
+       
+      }
+
+      else if (knob4Prev == 2 && conv == 0){
+        knob4Prev = conv;
+      }
+
+      else if (knob4Prev == 3 && conv == 2){
+        knob4Prev = conv;
+        if (keyArray[i] >0){keyArray[i]-= 1;}
+      }
+
+      else if (knob4Prev == 3 && conv == 1){
+        knob4Prev = conv;
+      }
+
+
+     
       }
       //for changing the wave type! //0 will be sawtooth for example. 
       else if (i == 4){
@@ -454,18 +626,89 @@ uint8_t readCols(uint8_t row){
 
 }
 
+static uint32_t timer = 0;
+
 void sampleISR() { // so this is added because the key is only shown up on the display but doesn't give audio output, thats where this function comes in.
   static uint32_t phaseAcc = 0; //so this being static means that it is only initialised at the start of the program.
   //This is for the sawtooth function
+  uint32_t nonstatPhase = 0;//pow(2, 32);
+
+  
   //It generates a linear line. 
   if (keyArray[4] == 0)
   {
     phaseAcc += currentStepSize;
+
+    int32_t Vout = (phaseAcc >> 24) - 128; 
+
+    Vout = Vout >> (8 - keyArray[3]);
+
+    analogWrite(OUTR_PIN, Vout + 128);
+
   }
-  else if (keyArray[4] == 1)
+  else if (keyArray[4] == 1 && currentStepSize != 0)
   {
-    phaseAcc += pow(2, 32)* sin(currentStepSize/pow(2, 32) * 2 * 3.1415 * millis());
+    //period of one wave is 1/440, 0.002 seconds approx. 
+    //this is equivalent to 50 / 22000
+
+    //uint32_t freq = currentFreq;
+
+    uint32_t period = periods[currentKey];
+
+
+    if (timer%period < period/2){
+      nonstatPhase = pow(2, 31);
+    }
+    else {nonstatPhase = 0;}
+
+    int32_t Vout = (nonstatPhase >> 24) - 128; 
+
+  Vout = Vout >> (8 - keyArray[3]);
+
+  analogWrite(OUTR_PIN, Vout + 128);
   }
+
+  else if (keyArray[4] == 2 && currentStepSize != 0){
+
+    //in progress
+
+    uint32_t period = periods[currentKey];
+
+
+    if (timer%period < period/2){ 
+      nonstatPhase = (timer%period)/period * pow(2, 32);
+    }
+    else {nonstatPhase =  0;}
+
+    int32_t Vout = (nonstatPhase >> 24) - 128; 
+
+  Vout = Vout >> (8 - keyArray[3]);
+
+  analogWrite(OUTR_PIN, Vout + 128);
+
+  }
+
+
+timer += 1;
+  //sine Wave:
+ //
+ //sine wave of frequency a. 
+
+ //Triangle wave: 
+ //set mode: up or down
+
+ //UP
+ //phaseAcc += currentStepSize
+
+ //DOWN
+ //phaseAcc -= currentStepSize
+
+
+  //Square wave: 
+  //phaseAcc = currentStepSize ? not sure. 
+ 
+  
+
 
   //sine Wave:
  //
@@ -486,17 +729,13 @@ void sampleISR() { // so this is added because the key is only shown up on the d
  
   
 
-  int32_t Vout = (phaseAcc >> 24) - 128; //change for volume to increase! (12 is the highest I reccomend, quite loud ) (12 is the highest volume, 24 is the lowest)
-  // volume is louder the closer to 12.
-
-  Vout = Vout >> (8 - keyArray[3]);
-
-  analogWrite(OUTR_PIN, Vout + 128);
-  //analogWrite(OUTR_PIN, 140);
+  
+  
+  
 }
 
 void decodeTask(void * param){
-  Serial.begin(9600);
+  //Serial.begin(9600);
 
 
   while(1){
@@ -510,8 +749,8 @@ void decodeTask(void * param){
       if (char(RX_Message[0]) == 'P'){
         int keyNum = RX_Message[2];
         int octave = RX_Message[1];
-        currentStepSize = stepSizes[keyNum];
-        currentStepSize *= pow(2, octave - 4);
+        //currentStepSize = stepSizes[keyNum];
+        //currentStepSize *= pow(2, octave - 4);
       }
 
 
@@ -529,12 +768,14 @@ void drawRect(int x, int y, int height, int width){
 
 
 
-void onStart(){ //A short demo function that does nothing. 
+void onStart(int offset){ //A short demo function that does nothing. 
   u8g2.clearBuffer(); 
-
-  drawRect(5, 5, 10, 100);
-  drawRect(5, 25, 10, 100);
-
+   u8g2.setFont(u8g2_font_ncenB08_tr);
+  
+  drawRect(5, 5, 5, 140);
+  drawRect(5, 25, 5, 140);
+  
+  u8g2.drawStr(0+offset, 20, "SynthMaster"); 
   u8g2.sendBuffer(); 
 }
 
@@ -548,8 +789,8 @@ void setup() {
 
   //alterSetup(); //changes the step functions
 
-  TIM_TypeDef *Instance = TIM1;
-  HardwareTimer *sampleTimer = new HardwareTimer(Instance);
+   TIM_TypeDef *Instance = TIM1;
+   HardwareTimer *sampleTimer = new HardwareTimer(Instance);
 
   sampleTimer->setOverflow(22000, HERTZ_FORMAT);
   sampleTimer->attachInterrupt(sampleISR);
@@ -589,9 +830,10 @@ void setup() {
   setOutMuxBit(DEN_BIT, HIGH);  //Enable display power supply
 
 
-  // while(millis() < 10000){ //does onstart
-  //   onStart();
-  // }
+  while(millis() < 5000){ //does onstart
+    int offset = (millis() < 2500) ?  int(millis() / 50) : 50;
+    onStart(offset);
+  }
 
 
   TaskHandle_t scanKeysHandle = NULL;
@@ -612,7 +854,7 @@ NULL,			/* Parameter passed into the task */
 1,			/* Task priority */
 &displayUpdateHandle );  /* Pointer to store the task handle */
 
-TaskHandle_t decodeHandle= NULL;
+TaskHandle_t decodeHandle= NULL; //PROBLEM HERE -> FIGURE OUT
   xTaskCreate(
 decodeTask,		/* Function that implements the task */
 "decode",		/* Text name for the task */
