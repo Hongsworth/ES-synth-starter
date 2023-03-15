@@ -12,7 +12,7 @@
   volatile uint32_t currentFreq;
   volatile uint32_t currentPeriod;
   volatile int32_t currentStepSize;
-  volatile int32_t keyArray[7];  // has 7 rows
+  volatile int32_t keyArray[7];  // has 7 rows and a 1d array
   const uint32_t base = pow(2, 32)/22000;
   uint32_t stepSizes[12] = {base * 261, base * 329, base * 415, base * 293, base * 370,
    base* 466, base*  277, base* 349, base * 440, base* 311, base* 392, base* 493};
@@ -114,35 +114,33 @@ std::string toBinary(int n)
     
 }
 
-
-
 std::string noteSelect(){
 
   for (int i =0; i < 3; i++){
 
     //if (keyArray[4] == 0){
 
+        //so 70 is hex 112 is decimal c0
       if (keyArray[i] == 112){
         if (i == 0) {currentKey = 0; currentStepSize = stepSizes[0]; return "C";}
         if (i == 1) {currentKey = 1; currentStepSize = stepSizes[1]; return "E";}
         if (i == 2) {currentKey = 2; currentStepSize = stepSizes[2]; return "G#";}
-
         
-      }
+      } //c2
       if (keyArray[i] == 208){
         if (i == 0) {currentKey = 3;currentStepSize = stepSizes[3]; return "D";}
         if (i == 1) {currentKey = 4;currentStepSize = stepSizes[4]; return "F#";}
         if (i == 2) {currentKey = 5;currentStepSize = stepSizes[5]; return "A#";}
 
         
-      }
+      } //c1
       if (keyArray[i] == 176){
         if (i == 0) {currentKey = 6;currentStepSize = stepSizes[6]; return "C#";}
         if (i == 1) {currentKey = 7;currentStepSize = stepSizes[7]; return "F";}
         if (i == 2) {currentKey = 8;currentStepSize = stepSizes[8]; return "A";}
 
-        
-      }
+      
+      } //c3
       if (keyArray[i] == 224){
         if (i == 0) {currentKey = 9;currentStepSize = stepSizes[9]; return "D#";}
         if (i == 1) {currentKey = 10;currentStepSize = stepSizes[10]; return "G";}
@@ -150,7 +148,11 @@ std::string noteSelect(){
 
         //currentKey = 4*i;
       }
-
+      if (keyArray[i] == 80){
+        if (i == 0) {currentKey = 12;currentStepSize = floor((stepSizes[0]+stepSizes[3])/2); return "C + D";}
+        if (i == 1) {currentKey = 13;currentStepSize = floor((stepSizes[1]+stepSizes[4])/2); return "E + F#";}
+        if (i == 2) {currentKey = 14;currentStepSize = floor((stepSizes[2]+stepSizes[5])/2); return "G# + A#";}
+      }
     
       
   }
@@ -275,6 +277,8 @@ void displayUpdateTask(void * param){
   
 }
 
+
+//__________________________________________ask angelo______________________________
 volatile uint32_t output = 0;
 
 void scanKeys(void * pvParameters){
@@ -511,6 +515,7 @@ void scanKeys(void * pvParameters){
 
 }
 
+//___________________________________ ask angelo_______________________________________
 
 
 uint8_t readCols(uint8_t row){
@@ -524,7 +529,7 @@ uint8_t readCols(uint8_t row){
   int c2 = digitalRead(C2_PIN);
   int c3 = digitalRead(C3_PIN);
 
-  //LOW WHEN PRESSED
+  //LOW WHEN PRESSED_________________________________________________________________________
   
   std::string out = "";
   uint8_t output;
