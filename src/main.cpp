@@ -229,7 +229,7 @@ void displayUpdateTask(void * param){
     u8g2.print(keyArray[3]);
 
     u8g2.drawStr(2,30,"Wave:");
-    u8g2.setCursor(30,30);
+    u8g2.setCursor(35,30);
     u8g2.print(keyArray[4]);
 
 
