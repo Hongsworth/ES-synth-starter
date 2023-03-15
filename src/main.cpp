@@ -631,7 +631,7 @@ static uint32_t timer = 0;
 void sampleISR() { // so this is added because the key is only shown up on the display but doesn't give audio output, thats where this function comes in.
   static uint32_t phaseAcc = 0; //so this being static means that it is only initialised at the start of the program.
   //This is for the sawtooth function
-  uint32_t nonstatPhase = 0;//pow(2, 32);
+  uint32_t nonstatPhase;//pow(2, 32);
 
   
   //It generates a linear line. 
@@ -657,7 +657,7 @@ void sampleISR() { // so this is added because the key is only shown up on the d
 
 
     if (timer%period < period/2){
-      nonstatPhase = pow(2, 31);
+      nonstatPhase = pow(2, 32);
     }
     else {nonstatPhase = 0;}
 
@@ -669,24 +669,26 @@ void sampleISR() { // so this is added because the key is only shown up on the d
   }
 
   else if (keyArray[4] == 2 && currentStepSize != 0){
-
-    //in progress
+    //weird bug, fix!
+    //in progress, sounds like square wave?
 
     uint32_t period = periods[currentKey];
 
 
     if (timer%period < period/2){ 
-      nonstatPhase = (timer%period)/period * pow(2, 32);
+      nonstatPhase += currentStepSize;
     }
-    else {nonstatPhase =  0;}
+    else {nonstatPhase -= currentStepSize;}
 
     int32_t Vout = (nonstatPhase >> 24) - 128; 
 
-  Vout = Vout >> (8 - keyArray[3]);
+    Vout = Vout >> (8 - keyArray[3]);
 
-  analogWrite(OUTR_PIN, Vout + 128);
+    analogWrite(OUTR_PIN, Vout + 128);
 
   }
+
+  else {nonstatPhase = 0;}
 
 
 timer += 1;
