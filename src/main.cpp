@@ -7,7 +7,7 @@
 //Constants
   const uint32_t interval = 100; //Display update interval
 
-
+  volatile int KEYNUM = 0;
   volatile uint8_t currentKey=0;
   volatile uint32_t currentFreq;
   volatile uint32_t currentPeriod;
@@ -34,6 +34,7 @@ SemaphoreHandle_t keyArrayMutex;
   
 //CAN
 QueueHandle_t msgInQ;
+QueueHandle_t msgOutQ;
 
 //Pin definitions
   //Row select and enable
@@ -239,7 +240,6 @@ void displayUpdateTask(void * param){
     while (CAN_CheckRXLevel())
 	    //CAN_RX(ID, RX_Message);
 
-    
     //u8g2.print((char) TX_Message[0]);
     u8g2.drawStr(30,30,"Oct"); 
     u8g2.setCursor(50,30);
@@ -248,6 +248,7 @@ void displayUpdateTask(void * param){
     u8g2.drawStr(60,30,"LastKey:"); 
     u8g2.setCursor(110,30);
     u8g2.print(RX_Message[2]);
+    //u8g2.print();
   
   //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
   //char conversion. Would use pointers but causes headaches. 
@@ -358,19 +359,20 @@ void scanKeys(void * pvParameters){
     //calculated output value.
     //i.e if output == F0, no keys
     //output == 70 && i == 0 key pressed was the first (C)
-    
       keyNum = i*4;
       TX_Message[0] = 'P';
       TX_Message[1] = 4; //octave
       TX_Message[2] = keyNum + change;  //key num
-      CAN_TX(0x123, TX_Message);
+      //CAN_TX(0x123, TX_Message);
+      //xQueueSend( msgOutQ, TX_Message, portMAX_DELAY);
     }
     if (output > keyArray[i]){
       keyNum = i*4;
       TX_Message[0] = 'R';
       TX_Message[1] = 4; //octave
       //TX_Message[2] = keyNum + change;  //key num
-      CAN_TX(0x123, TX_Message); //DO NOT UPDATE KEY PRESSED HERE!!!
+      //CAN_TX(0x123, TX_Message); //DO NOT UPDATE KEY PRESSED HERE!!!
+      //xQueueSend( msgOutQ, TX_Message, portMAX_DELAY);
     }
 
     keyArray[i] = output;
@@ -503,6 +505,8 @@ void scanKeys(void * pvParameters){
       }
     xSemaphoreGive(keyArrayMutex);
     }
+    TX_Message[3] = keyArray[3];
+    xQueueSend( msgOutQ, TX_Message, portMAX_DELAY);
   }
 
 }
@@ -593,60 +597,18 @@ void sampleISR() { // so this is added because the key is only shown up on the d
     Vout = Vout >> (8 - keyArray[3]);
 
     analogWrite(OUTR_PIN, Vout + 128);
-
   }
 
   else {nonstatPhase = 0;}
 
 
 timer += 1;
-  //sine Wave:
- //
- //sine wave of frequency a. 
 
- //Triangle wave: 
- //set mode: up or down
-
- //UP
- //phaseAcc += currentStepSize
-
- //DOWN
- //phaseAcc -= currentStepSize
-
-
-  //Square wave: 
-  //phaseAcc = currentStepSize ? not sure. 
- 
-  
-
-
-  //sine Wave:
- //
- //sine wave of frequency a. 
-
- //Triangle wave: 
- //set mode: up or down
-
- //UP
- //phaseAcc += currentStepSize
-
- //DOWN
- //phaseAcc -= currentStepSize
-
-
-  //Square wave: 
-  //phaseAcc = currentStepSize ? not sure. 
- 
-  
-
-  
-  
   
 }
 
 void decodeTask(void * param){
   //Serial.begin(9600);
-
 
   while(1){
     xQueueReceive(msgInQ, RX_Message, portMAX_DELAY);
@@ -659,6 +621,8 @@ void decodeTask(void * param){
       if (char(RX_Message[0]) == 'P'){
         int keyNum = RX_Message[2];
         int octave = RX_Message[1];
+
+      
         //currentStepSize = stepSizes[keyNum];
         //currentStepSize *= pow(2, octave - 4);
       }
@@ -693,6 +657,22 @@ void selectSong(){
   //initialise some features to play a specific song? TBD
   //list of options as a UI interface?
 }
+SemaphoreHandle_t CAN_TX_Semaphore;
+
+
+void CAN_TX_Task (void * pvParameters) {
+	uint8_t msgOut[8];
+	while (1) {
+		xQueueReceive(msgOutQ, msgOut, portMAX_DELAY);
+		xSemaphoreTake(CAN_TX_Semaphore, portMAX_DELAY);
+		CAN_TX(0x123, msgOut);
+	}
+}
+
+void CAN_TX_ISR (void) {
+	xSemaphoreGiveFromISR(CAN_TX_Semaphore, NULL);
+}
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -706,14 +686,22 @@ void setup() {
   sampleTimer->attachInterrupt(sampleISR);
   sampleTimer->resume();
 
-  CAN_Init(true);
+  CAN_Init(false);
+
   CAN_RegisterRX_ISR(CAN_RX_ISR);
+
+  CAN_RegisterTX_ISR(CAN_TX_ISR);
+
   setCANFilter(0x123,0x7ff);
   CAN_Start();
 
   //CAN part 3
 
   msgInQ = xQueueCreate(36,8);
+  msgOutQ = xQueueCreate(36,8);
+  CAN_TX_Semaphore = xSemaphoreCreateCounting(3,3);
+
+  
 
   //Set pin directions
   pinMode(RA0_PIN, OUTPUT);
@@ -773,6 +761,15 @@ NULL,			/* Parameter passed into the task */
 3,			/* Task priority */
 &decodeHandle ); 
 
+
+TaskHandle_t taskTXHandle= NULL; //PROBLEM HERE -> FIGURE OUT
+  xTaskCreate(
+CAN_TX_Task,		/* Function that implements the task */
+"send",		/* Text name for the task */
+64,      		/* Stack size in words, not bytes */
+NULL,			/* Parameter passed into the task */
+4,			/* Task priority */
+&taskTXHandle ); 
   //Initialise UART
   Serial.begin(9600);
   Serial.println("Hello World");
