@@ -3,11 +3,8 @@
 #include <STM32FreeRTOS.h>
 #include <cmath>
 #include <ES_CAN.h>
-<<<<<<< HEAD
 #include <iostream>
 #include <vector>
-=======
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
 
 //Constants
   const uint32_t interval = 100; //Display update interval
@@ -116,11 +113,7 @@ std::string toBinary(int n)
   if (n == 5){
     return "101";
   }
-<<<<<<< HEAD
   
-=======
-    
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
 }
 
 std::string noteSelect(){
@@ -162,16 +155,13 @@ std::string noteSelect(){
         if (i == 1) {currentKey = 13;currentStepSize = floor((stepSizes[1]+stepSizes[4])/2); return "E + F#";}
         if (i == 2) {currentKey = 14;currentStepSize = floor((stepSizes[2]+stepSizes[5])/2); return "G# + A#";}
       }
-<<<<<<< HEAD
     
-=======
       if (keyArray[i] == 48){
         if (i == 0) {currentKey = 15;currentStepSize = floor((stepSizes[0]+stepSizes[6])/2); return "C + C#";}
         if (i == 1) {currentKey = 16;currentStepSize = floor((stepSizes[1]+stepSizes[7])/2); return "E + F";}
         if (i == 2) {currentKey = 17;currentStepSize = floor((stepSizes[2]+stepSizes[8])/2); return "G# + A";}
       }
       
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
       
   }
 
@@ -189,11 +179,8 @@ void setRow(uint8_t rowIdx){
 
   int ra0, ra1, ra2 = LOW;
 
-<<<<<<< HEAD
   //so ra0 and ra1 and ra2 set to low so we can check the row 
 
-=======
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
   // ra0 = (binaryIdx[2] == '1') ? HIGH : LOW; //set values of ra pins 
   // ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
   // ra2 = (binaryIdx[0] == '1') ? HIGH : LOW;
@@ -301,7 +288,6 @@ void displayUpdateTask(void * param){
 }
 
 
-<<<<<<< HEAD
 //______________________added today________________
 // std::vector<bool> whichkey(void * pvParameters){
 //     volatile int c0 = HIGH;
@@ -324,8 +310,6 @@ void displayUpdateTask(void * param){
 // }
 //__________________added by aryan the setkey_____________
 
-=======
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
 //__________________________________________ask angelo______________________________
 volatile uint32_t output = 0;
 
@@ -641,11 +625,7 @@ void sampleISR() { // so this is added because the key is only shown up on the d
 
     analogWrite(OUTR_PIN, Vout + 128);
 
-<<<<<<< HEAD
   }// sawtooth
-=======
-  }
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
   else if (keyArray[4] == 1 && currentStepSize != 0)
   {
     //period of one wave is 1/440, 0.002 seconds approx. 
@@ -668,19 +648,13 @@ void sampleISR() { // so this is added because the key is only shown up on the d
   analogWrite(OUTR_PIN, Vout + 128);
   }
 
-<<<<<<< HEAD
 //square wave
 
-=======
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
   else if (keyArray[4] == 2 && currentStepSize != 0){
     //weird bug, fix!
     //in progress, sounds like square wave?
 
-<<<<<<< HEAD
 //
-=======
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
     uint32_t period = periods[currentKey];
 
 
@@ -695,11 +669,7 @@ void sampleISR() { // so this is added because the key is only shown up on the d
 
     analogWrite(OUTR_PIN, Vout + 128);
   }
-<<<<<<< HEAD
 // triangle wave
-=======
-
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
   else {nonstatPhase = 0;}
 
 
@@ -787,11 +757,7 @@ void setup() {
   sampleTimer->attachInterrupt(sampleISR);
   sampleTimer->resume();
 
-<<<<<<< HEAD
   CAN_Init(true);
-=======
-  CAN_Init(false);
->>>>>>> 44f78770636098865deea3727b914c0751cf48f0
 
   CAN_RegisterRX_ISR(CAN_RX_ISR);
 
