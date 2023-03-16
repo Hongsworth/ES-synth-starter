@@ -9,6 +9,7 @@
   const uint32_t interval = 100; //Display update interval
 
   uint8_t RX_Message[8]={0};
+  int8_t octave = 4;
 
   QueueHandle_t msgInQ;
   QueueHandle_t msgOutQ;
@@ -17,8 +18,24 @@
   volatile uint32_t currentStepSize;
   volatile int32_t keyArray[7];  // has 7 rows
   const uint32_t base = pow(2, 32)/22000;
-  uint32_t stepSizes[12] = {base * 261, base * 329, base * 415, base * 293, base * 370,
+  volatile uint32_t stepSizes[12] = {base * 261, base * 329, base * 415, base * 293, base * 370,
    base* 466, base*  277, base* 349, base * 440, base* 311, base* 392, base* 493};
+  //  order (C, E, G#, D, F#, A#, C#, F, A, D#, G, B)
+  volatile uint32_t newstepSizes[72] = {
+    12769719,25537484,51076923,102151892,204303785,408607570,
+    16088557,32175161,64352276,128704553,257407153,514814306,
+    20270293,40538633,81077266,162156487,324312974,648625949,
+    14333476,28665002,57330005,114661964,229323928,458647857,
+    18058385,36116770,72231586,144465127,288930255,577860510,
+    22751613,45503226,91006453,182014860,364029721,728057488,
+    13529147,27056340,54112681,108227318,216452682,432905364,
+    17045162,34088374,68178703,136357406,272712859,545427673,
+    21474836,42949672,85899345,171798691,343597383,687194767,
+    15184661,30369322,60740599,121479245,242960445,485920890,
+    19132127,38264254,76528508,153055062,306110124,612220248,
+    24104528,48209056,96418112,192838178,385674403,771350760
+    };
+  
 
 
    float rootRet(int power) //return a power of the root of 12
@@ -33,6 +50,13 @@ void CAN_RX_ISR (void) {
 	xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
 }
 
+// void arraymult(volatile uint32_t stepSizes[], int8_t octave){
+  // for(int i = 0; i < sizeof(stepSizes); i++){
+    // newstepSizes[i] = stepSizes[i] * pow(2, (octave - 4));
+  // }
+// 
+// }
+
 void decodeTask(void * param){
   while(xQueueReceive(msgInQ, RX_Message, portMAX_DELAY)){
     if(char(RX_Message[0]) == 'R'){
@@ -41,7 +65,7 @@ void decodeTask(void * param){
 
     if(char(RX_Message[0]) == 'P'){
       int keyNum = RX_Message[2];
-      int octave = RX_Message[1];
+      // int octave = RX_Message[1];
     }
   }
 }
@@ -149,24 +173,24 @@ std::string noteSelect(){
   for (int i =0; i < 3; i++){
 
     if (keyArray[i] == 112){
-      if (i == 0) {currentStepSize = stepSizes[0]; return "C";}
-      if (i == 1) {currentStepSize = stepSizes[1]; return "E";}
-      if (i == 2) {currentStepSize = stepSizes[2]; return "G#";}
+      if (i == 0) {currentStepSize = newstepSizes[0+octave-2]; return "C";}
+      if (i == 1) {currentStepSize = newstepSizes[6+octave-2]; return "E";}
+      if (i == 2) {currentStepSize = newstepSizes[12+octave-2]; return "G#";}
     }
     if (keyArray[i] == 208){
-      if (i == 0) {currentStepSize = stepSizes[3]; return "D";}
-      if (i == 1) {currentStepSize = stepSizes[4]; return "F#";}
-      if (i == 2) {currentStepSize = stepSizes[5]; return "A#";}
+      if (i == 0) {currentStepSize = newstepSizes[18+octave-2]; return "D";}
+      if (i == 1) {currentStepSize = newstepSizes[24+octave-2]; return "F#";}
+      if (i == 2) {currentStepSize = newstepSizes[30+octave-2]; return "A#";}
     }
     if (keyArray[i] == 176){
-      if (i == 0) {currentStepSize = stepSizes[6]; return "C#";}
-      if (i == 1) {currentStepSize = stepSizes[7]; return "F";}
-      if (i == 2) {currentStepSize = stepSizes[8]; return "A";}
+      if (i == 0) {currentStepSize = newstepSizes[36+octave-2]; return "C#";}
+      if (i == 1) {currentStepSize = newstepSizes[42+octave-2]; return "F";}
+      if (i == 2) {currentStepSize = newstepSizes[48+octave-2]; return "A";}
     }
     if (keyArray[i] == 224){
-      if (i == 0) {currentStepSize = stepSizes[9]; return "D#";}
-      if (i == 1) {currentStepSize = stepSizes[10]; return "G";}
-      if (i == 2) {currentStepSize = stepSizes[11]; return "B";}
+      if (i == 0) {currentStepSize = newstepSizes[54+octave-2]; return "D#";}
+      if (i == 1) {currentStepSize = newstepSizes[60+octave-2]; return "G";}
+      if (i == 2) {currentStepSize = newstepSizes[66+octave-2]; return "B";}
     }
     
   }
@@ -245,7 +269,8 @@ void displayUpdateTask(void * param){
     //u8g2.print((char) TX_Message[0]);
     u8g2.drawStr(30,30,"Oct"); 
     u8g2.setCursor(50,30);
-    u8g2.print(RX_Message[1]);
+    // u8g2.print(RX_Message[1]);
+    u8g2.print(octave);
 
     u8g2.drawStr(60,30,"LastKey:"); 
     u8g2.setCursor(110,30);
@@ -288,7 +313,7 @@ void scanKeys(void * pvParameters){
   int8_t knob2Prev = 0;
 
   int8_t conv;
-  // int8_t conv2;
+  int8_t conv2;
 
   int8_t keyNum=0;
   
@@ -299,6 +324,7 @@ void scanKeys(void * pvParameters){
     for (int i = 0; i < 6; i++)
   {
     conv = 0;
+    conv2 = 0;
     
     setRow(i);
 
@@ -331,7 +357,7 @@ void scanKeys(void * pvParameters){
     if (c2 == HIGH){
       output+=pow(2, 5);
 
-      // conv2 += 2;
+      conv2 += 2;
       
     }
     else{
@@ -340,7 +366,7 @@ void scanKeys(void * pvParameters){
     if (c3 == HIGH){
       output+=pow(2, 4);
 
-      // conv2 += 1;
+      conv2 += 1;
       
     }
     else{
@@ -406,35 +432,48 @@ void scanKeys(void * pvParameters){
         knob3Prev = conv;
       }
 
-      // if (knob2Prev == 0 && conv2 == 1){
-        // knob2Prev = conv2;
-        // if (keyArray[i] > 0){keyArray[i]-= 1;}
-      // }
-      // else if (knob2Prev == 0 && conv2 == 2){
-        // knob2Prev = conv2;
-      // }
-      // else if (knob2Prev == 1 && conv2 == 0){
-        // knob2Prev = conv;
-        // if (keyArray[i] < 8){keyArray[i]+= 1;}
-      // }
-      // else if (knob2Prev == 1 && conv2 == 3){
-        // knob2Prev = conv2;
-      // }
-      // else if (knob2Prev == 2 && conv2 == 3){
-        // knob2Prev = conv2;
-        // if (keyArray[i] < 8){keyArray[i]+= 1;}
+      else if (knob2Prev == 0 && conv2 == 1){
+        knob2Prev = conv2;
+        if(octave > 0){
+          octave -= 1;
+          // arraymult(stepSizes,octave);
+        }
+      }
+      else if (knob2Prev == 0 && conv2 == 2){
+        knob2Prev = conv2;
+      }
+      else if (knob2Prev == 1 && conv2 == 0){
+        knob2Prev = conv2;
+        if(octave < 8){
+          octave += 1;
+          // arraymult(stepSizes,octave);
+        }
+      }
+      else if (knob2Prev == 1 && conv2 == 3){
+        knob2Prev = conv2;
+      }
+      else if (knob2Prev == 2 && conv2 == 3){
+        knob2Prev = conv2;
+        if(octave < 8){
+          octave += 1;
+          // arraymult(stepSizes,octave);
+        }
 
-      // }
-      // else if (knob2Prev == 2 && conv2 == 0){
-        // knob2Prev = conv2;
-      // }
-      // else if (knob2Prev == 3 && conv2 == 2){
-        // knob2Prev = conv2;
-        // if (keyArray[i] >0){keyArray[i]-= 1;}
-      // }
-      // else if (knob2Prev == 3 && conv2 == 1){
-        // knob2Prev = conv2;
-      // }
+      }
+      else if (knob2Prev == 2 && conv2 == 0){
+        knob2Prev = conv2;
+      }
+      else if (knob2Prev == 3 && conv2 == 2){
+        knob2Prev = conv2;
+        if(octave > 0){
+          octave -= 1;
+          // arraymult(stepSizes,octave);
+        }
+      }
+      else if (knob2Prev == 3 && conv2 == 1){
+        knob2Prev = conv2;
+      }   
+      // arraymult(stepSizes,octave);
 
 
       //knob3Prev = conv;
@@ -491,16 +530,16 @@ void setup() {
   // initialise Semaphore
   CAN_TX_Semaphore = xSemaphoreCreateCounting(3,3);
   // initialise 
-  // CAN_Init(true);
-  // CAN_RegisterTX_ISR(CAN_TX_ISR);
-  // setCANFilter(0x123,0x7ff);
-  // CAN_Start();
-
-  // initialise CAN
   CAN_Init(true);
-  CAN_RegisterRX_ISR(CAN_RX_ISR);
+  CAN_RegisterTX_ISR(CAN_TX_ISR);
   setCANFilter(0x123,0x7ff);
   CAN_Start();
+
+  // initialise CAN
+  // CAN_Init(true);
+  // CAN_RegisterRX_ISR(CAN_RX_ISR);
+  // setCANFilter(0x123,0x7ff);
+  // CAN_Start();
 
   msgInQ = xQueueCreate(36,8);
   msgOutQ = xQueueCreate(36,8);
@@ -563,8 +602,17 @@ TaskHandle_t CAN_TX_TaskHandle = NULL;
     "transmit",
     4,
     NULL,
-    1,
+    3,
   &CAN_TX_TaskHandle );
+
+  TaskHandle_t decodeHandle= NULL; //PROBLEM HERE -> FIGURE OUT
+  xTaskCreate(
+decodeTask,		/* Function that implements the task */
+"decode",		/* Text name for the task */
+64,      		/* Stack size in words, not bytes */
+NULL,			/* Parameter passed into the task */
+4,			/* Task priority */
+&decodeHandle );
 
   //Initialise UART
   Serial.begin(9600);
