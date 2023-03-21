@@ -148,15 +148,31 @@ std::string noteSelect(){
 
         //currentKey = 4*i;
       }
+<<<<<<< Updated upstream
       if (keyArray[i] == 80){
         if (i == 0) {currentKey = 12;currentStepSize = floor((stepSizes[0]+stepSizes[3])/2); return "C + D";}
         if (i == 1) {currentKey = 13;currentStepSize = floor((stepSizes[1]+stepSizes[4])/2); return "E + F#";}
         if (i == 2) {currentKey = 14;currentStepSize = floor((stepSizes[2]+stepSizes[5])/2); return "G# + A#";}
       }
     
+=======
+
+    if (keyArray[i] == 80){
+      if (i == 0) {
+        currentKey = 12;
+        currentStepSize = floor((stepSizes[0]+stepSizes[3])/2);
+         return "C+D";}
+         if (i == 1) {
+          currentKey = 13;
+          currentStepSize = floor((stepSizes[1]+stepSizes[4])/2);
+           return "E+F#";}
+           if (i == 2) {
+            currentKey = 14;currentStepSize = floor((stepSizes[2]+stepSizes[5])/2);
+             return "G#+A#";}// it should be the 2 independant notes and the volume should increase to the next level also        //currentKey = 4*i;      }
+>>>>>>> Stashed changes
       
   }
-
+  }
 
   currentStepSize = 0;
   return "No Note";
@@ -658,6 +674,127 @@ void onStart(int offset){ //A short demo function that does nothing.
   u8g2.sendBuffer(); 
 }
 
+void scanJoyStick(){
+
+
+  
+}
+
+int prevState = 0;
+int prevJoyY = 500;
+int prevJoyX = 500;
+
+
+int readJoyStick(){
+  setRow(5);
+  //delay(0.5);
+  int C2State = digitalRead(C2_PIN);
+  double joyX =  analogRead(JOYX_PIN);
+  double joyY =  analogRead(JOYY_PIN);
+  
+//  u8g2.clearBuffer(); 
+  //c2 is to press
+  //  u8g2.setCursor(20, 30); 
+  // u8g2.print(joyX); 
+  u8g2.setCursor(130, 30); 
+  u8g2.print(joyY); 
+
+
+    
+
+ 
+
+//   if (joyX < 100){
+    
+//   //   u8g2.clearBuffer(); 
+//   u8g2.setFont(u8g2_font_ncenB08_tr);
+
+//   u8g2.drawStr( 10, 20, "Right!"); 
+  
+
+//  }
+
+//   else if (joyX > 900 ){
+    
+//   //   u8g2.clearBuffer(); 
+//   u8g2.setFont(u8g2_font_ncenB08_tr);
+
+//   u8g2.drawStr( 10, 20, "Left!"); 
+
+//  }
+
+  if (joyY < 150 && prevJoyY > 150 && prevState > 1){
+    
+  //   u8g2.clearBuffer(); 
+  prevState -= 2;
+
+ }
+
+  else if (joyY > 850 && prevJoyY < 850 && prevState < 2){
+    
+  //   u8g2.clearBuffer(); 
+  // 
+  prevState += 2;
+
+ }
+
+ if (prevState == 0){
+  u8g2.drawStr( 5, 20, ">"); 
+ }
+
+ if (prevState == 2){
+  u8g2.drawStr( 5, 30, ">"); 
+ }
+
+if (C2State == LOW){
+  return prevState;
+}
+ prevJoyY = joyY;
+return -1;
+
+//  else {
+//   u8g2.setFont(u8g2_font_ncenB08_tr);
+
+//   u8g2.drawStr( 10, 20, "No Movement!"); 
+//  }
+ 
+
+  
+
+}
+
+int selection = -1;
+
+void setupMenu(){
+
+
+//readJoyStick();
+  u8g2.clearBuffer(); 
+   u8g2.setFont(u8g2_font_ncenB08_tr);
+  
+  if (selection != -1){
+    if (selection == 0){
+      u8g2.drawStr( 10, 20, "Transmitter Selected!"); 
+    }
+    if (selection == 2){
+      u8g2.drawStr( 10, 20, "Reciever Selected!"); 
+    }
+  }
+  else {
+    selection = readJoyStick();
+    u8g2.drawStr( 10, 10, "This board is a...!"); 
+  u8g2.drawStr( 10, 20, "Transmitter"); 
+  u8g2.drawStr( 10, 30, "Reciever   "); 
+  }
+  
+  u8g2.sendBuffer(); 
+
+
+
+
+
+}
+
 void selectSong(){
   //initialise some features to play a specific song? TBD
   //list of options as a UI interface?
@@ -679,6 +816,8 @@ void CAN_TX_ISR (void) {
 }
 
 
+
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -691,7 +830,7 @@ void setup() {
   sampleTimer->attachInterrupt(sampleISR);
   sampleTimer->resume();
 
-  CAN_Init(false);
+  CAN_Init(true); //for looping set to true
 
   CAN_RegisterRX_ISR(CAN_RX_ISR);
 
@@ -736,6 +875,14 @@ void setup() {
   while(millis() < 5000){ //does onstart
     int offset = (millis() < 2500) ?  int(millis() / 50) : 50;
     onStart(offset);
+  }
+
+  bool start = false;
+  while(!start){
+
+      setupMenu();
+
+
   }
 
 
