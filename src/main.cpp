@@ -6,6 +6,10 @@
 #include <ES_CAN.h>
 
 using std::chrono::high_resolution_clock;
+using std::chrono::microseconds;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::milliseconds;
 
 //Constants
   const uint32_t interval = 100; //Display update interval
@@ -265,10 +269,11 @@ void setRow(uint8_t rowIdx){
 std::string decodeNote(){
   int noteNum = RX_Message[2];
 
-  Serial.println("Here");
+  //Serial.println("Here");
 
-  switch(noteNum){
-  
+
+
+  switch(noteNum+1){
 
     case 1: 
 
@@ -322,8 +327,8 @@ std::string decodeNote(){
 
 
     default: 
+    return "";
     
-    return "No Note";
 
   }
 }
@@ -366,9 +371,9 @@ void displayUpdateTask(void * param){
     u8g2.setCursor(110,10);
     u8g2.print(keyArray[3]);
 
-    u8g2.drawStr(2,30,"Wave:");
+    u8g2.drawStr(2,30,"Octave::");
     u8g2.setCursor(35,30);
-    u8g2.print(keyArray[4]);
+    
 
 
     xSemaphoreGive(keyArrayMutex);
@@ -378,12 +383,12 @@ void displayUpdateTask(void * param){
 	    //CAN_RX(ID, RX_Message);
 
     //u8g2.print((char) TX_Message[0]);
-    u8g2.drawStr(30,30,"Oct"); 
+    //u8g2.drawStr(30,30,"Oct"); 
     u8g2.setCursor(50,30);
     //if(currentStepSize != 0){
 
    
-    u8g2.print(OCTAVE);
+    u8g2.print(originalOCTAVE);
    
     //}
 
@@ -392,6 +397,10 @@ void displayUpdateTask(void * param){
 
     //if(currentStepSizes[0] == 0){
     u8g2.print(RX_Message[2]);
+    std::string lastNote = "";
+    if (RX_Message[2] == 0){
+      lastNote = "C";
+    }
     //}
     // else{
     //   u8g2.print(KEYNUM);
@@ -402,7 +411,9 @@ void displayUpdateTask(void * param){
   //char conversion. Would use pointers but causes headaches. 
   // if(currentStepSizes[0] != 0){
    
+   
   std::string note; 
+
     
 if (reciever){
   note = noteSelect();
@@ -414,15 +425,22 @@ if (reciever){
     u8g2.print(a); 
    }
     }
-   else if (char(RX_Message[0]) == 'P'){
+   else if ((RX_Message[0]) == int('P')){
   note = decodeNote();
   for (int i = 0; i < note.size(); i++){
     char a = note[i];
     u8g2.setCursor(62 + i*5, 20);
     u8g2.print(a); 
    }
+
    }else {
     currentStepSizes[0] = 0;
+    note = decodeNote();
+  for (int i = 0; i < note.size(); i++){
+    char a = note[i];
+    u8g2.setCursor(62 + i*5, 20);
+    u8g2.print(a); 
+   }
    }
 
 
@@ -432,7 +450,13 @@ if (reciever){
       }
       
       else if (!reciever && !soloMode) {
-        u8g2.drawStr(60,30,"TRA"); 
+        u8g2.drawStr(90,20,"SEND"); 
+        note = decodeNote();
+  for (int i = 0; i < note.size(); i++){
+    char a = note[i];
+    u8g2.setCursor(62 + i*5, 20);
+    u8g2.print(a); 
+   }
       }
       else if (soloMode){
         note = noteSelect();
@@ -441,7 +465,7 @@ if (reciever){
           u8g2.setCursor(62 + i*5, 20);
           u8g2.print(a); 
           }
-          u8g2.drawStr(60,30,"SOLO"); 
+          u8g2.drawStr(90,20,"SOLO"); 
         
 
 
@@ -469,7 +493,7 @@ if (reciever){
 }
 
 
-//__________________________________________ask angelo______________________________
+
 volatile uint32_t output = 0;
 
 void scanKeys(void * pvParameters){
@@ -975,7 +999,7 @@ void setupMenu(){
       //soloMode = true;
     }
     if (selection == 2){
-      u8g2.drawStr( 10, 20, "Transmitter Selected"); 
+      u8g2.drawStr( 10, 20, "Sender Selected"); 
       delay(1000);
       start = true;
       reciever = false;
@@ -1004,7 +1028,7 @@ void setupMenu(){
     u8g2.drawStr( 85, 10, "OCT"); 
   u8g2.drawStr( 10, 10, "Receiver"); 
   u8g2.drawStr( 85, 20, "GAME"); 
-  u8g2.drawStr( 10, 20, "Transmitter"); 
+  u8g2.drawStr( 10, 20, "Sender"); 
   u8g2.drawStr( 85, 30, "CREDS"); 
 
   u8g2.setCursor(120, 10);
