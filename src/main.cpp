@@ -4,10 +4,10 @@
 #include <cmath>
 #include <ES_CAN.h>
 #include <iostream>
-#include <vector>
 
 //Constants
   const uint32_t interval = 100; //Display update interval
+
 
   volatile int KEYNUM = 0;
   volatile uint8_t currentKey=0;
@@ -113,7 +113,7 @@ std::string toBinary(int n)
   if (n == 5){
     return "101";
   }
-  
+    
 }
 
 std::string noteSelect(){
@@ -156,12 +156,6 @@ std::string noteSelect(){
         if (i == 2) {currentKey = 14;currentStepSize = floor((stepSizes[2]+stepSizes[5])/2); return "G# + A#";}
       }
     
-      if (keyArray[i] == 48){
-        if (i == 0) {currentKey = 15;currentStepSize = floor((stepSizes[0]+stepSizes[6])/2); return "C + C#";}
-        if (i == 1) {currentKey = 16;currentStepSize = floor((stepSizes[1]+stepSizes[7])/2); return "E + F";}
-        if (i == 2) {currentKey = 17;currentStepSize = floor((stepSizes[2]+stepSizes[8])/2); return "G# + A";}
-      }
-      
       
   }
 
@@ -178,8 +172,6 @@ void setRow(uint8_t rowIdx){
   std::string binaryIdx = toBinary(rowIdx);
 
   int ra0, ra1, ra2 = LOW;
-
-  //so ra0 and ra1 and ra2 set to low so we can check the row 
 
   // ra0 = (binaryIdx[2] == '1') ? HIGH : LOW; //set values of ra pins 
   // ra1 = (binaryIdx[1] == '1') ? HIGH : LOW;
@@ -288,28 +280,6 @@ void displayUpdateTask(void * param){
 }
 
 
-//______________________added today________________
-// std::vector<bool> whichkey(void * pvParameters){
-//     volatile int c0 = HIGH;
-//     volatile int c1 = HIGH;
-//     volatile int c2 = HIGH;
-//     volatile int c3 = HIGH;
-
-//     c0 = digitalRead(C0_PIN);
-//     c1 = digitalRead(C1_PIN);
-//     c2 = digitalRead(C2_PIN);
-//     c3 = digitalRead(C3_PIN);
-//    //return a vector of boolean values to tell me which keys are pressed
-//    for(int i=0; i++; i<6){
-//    setRow(i);
-//    if (i == 0 && c0 == LOW){}
-//    }
-
-
-
-// }
-//__________________added by aryan the setkey_____________
-
 //__________________________________________ask angelo______________________________
 volatile uint32_t output = 0;
 
@@ -383,36 +353,7 @@ void scanKeys(void * pvParameters){
         change = 4;
       }
 
-bool whichkey[12]={false,false,false,false,false,false,false,false,false,false,false,false};
-// for each individual key so we can start convolution
-  if (i == 0 && c0 == LOW){
-   whichkey[0]= true;
-  }  if (i == 0 && c1 == LOW){
-   whichkey[1]= true;
-  }  if (i == 0 && c2 == LOW){
-   whichkey[2]= true;
-  }  if (i == 0 && c3 == LOW){
-   whichkey[3]= true;
-  }  if (i == 1 && c0 == LOW){
-   whichkey[4]= true;
-  }  if (i == 1 && c1 == LOW){
-   whichkey[5]= true;
-  }  if (i == 1 && c2 == LOW){
-   whichkey[6]= true;
-  }  if (i == 1 && c3 == LOW){
-   whichkey[7]= true;
-  }  if (i == 2 && c0 == LOW){
-   whichkey[8]= true;
-  }  if (i == 2 && c1 == LOW){
-   whichkey[9]= true;
-  }  if (i == 2 && c2 == LOW){
-   whichkey[10]= true;
-  }  if (i == 2 && c3 == LOW){
-   whichkey[11]= true;
-  } 
 
-  //the index goes across ra0 then ra1 and ra2
-  // so now we know which key are being pressed so now we can do convolution on those frequencies 
   
 
     xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
@@ -602,8 +543,6 @@ uint8_t readCols(uint8_t row){
 
   return output;
 
-
-
 }
 
 static uint32_t timer = 0;
@@ -625,7 +564,7 @@ void sampleISR() { // so this is added because the key is only shown up on the d
 
     analogWrite(OUTR_PIN, Vout + 128);
 
-  }// sawtooth
+  }
   else if (keyArray[4] == 1 && currentStepSize != 0)
   {
     //period of one wave is 1/440, 0.002 seconds approx. 
@@ -648,13 +587,10 @@ void sampleISR() { // so this is added because the key is only shown up on the d
   analogWrite(OUTR_PIN, Vout + 128);
   }
 
-//square wave
-
   else if (keyArray[4] == 2 && currentStepSize != 0){
     //weird bug, fix!
     //in progress, sounds like square wave?
 
-//
     uint32_t period = periods[currentKey];
 
 
@@ -669,7 +605,7 @@ void sampleISR() { // so this is added because the key is only shown up on the d
 
     analogWrite(OUTR_PIN, Vout + 128);
   }
-// triangle wave
+
   else {nonstatPhase = 0;}
 
 
@@ -747,7 +683,12 @@ void CAN_TX_ISR (void) {
 
 void setup() {
   // put your setup code here, to run once:
-
+//________________
+unsigned long start_time = micros();
+uint8_t result = readCols(row);
+unsigned long end_time = micros();
+unsigned long execution_time = end_time - start_time;std::cout>>execution_time>>std::cin;
+//________________
   //alterSetup(); //changes the step functions
 
    TIM_TypeDef *Instance = TIM1;
@@ -757,7 +698,7 @@ void setup() {
   sampleTimer->attachInterrupt(sampleISR);
   sampleTimer->resume();
 
-  CAN_Init(true);
+  CAN_Init(false);
 
   CAN_RegisterRX_ISR(CAN_RX_ISR);
 
@@ -853,6 +794,3 @@ NULL,			/* Parameter passed into the task */
 
 void loop() {
   }
-
-
-
