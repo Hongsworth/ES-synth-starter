@@ -7,6 +7,9 @@
 //Constants
   const uint32_t interval = 100; //Display update interval
 
+  bool reciever = false;
+
+
   volatile int KEYNUM = 0;
   volatile uint8_t currentKey=0;
   volatile uint32_t currentFreq;
@@ -121,7 +124,16 @@ std::string notes = "";
 int j = 0;
   for (int i =0; i < 3; i++){
 
-  
+      if (keyArray[i] == 50){
+        if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="CD";j ++;}
+        if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "EF#";j ++;}
+        if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#A#";j ++;}
+      }
+      if (keyArray[i] == 30){
+        if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="CC#";j ++;}
+        if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "EF";j ++;}
+        if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#A";j ++;}
+      }
         
       if (keyArray[i] == 112){
         if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="C";j ++;}
@@ -152,22 +164,22 @@ int j = 0;
       }
       
    
-
+      
   
 }
-Serial.println(currentKey);
-  if (j == 0){
-    currentStepSizes[0] = 0;
-    currentStepSizes[1] = 0;
-    currentStepSizes[2] = 0;
-  }
-  if (j == 1){
-    currentStepSizes[1] = 0;
-    currentStepSizes[2] = 0;
-  }
-  if (j == 2){
-    currentStepSizes[2] = 0;
-  }
+//Serial.println(currentKey);
+  // if (j == 0){
+  //   currentStepSizes[0] = 0;
+  //   currentStepSizes[1] = 0;
+  //   currentStepSizes[2] = 0;
+  // }
+  // if (j == 1){
+  //   currentStepSizes[1] = 0;
+  //   currentStepSizes[2] = 0;
+  // }
+  // if (j == 2){
+  //   currentStepSizes[2] = 0;
+  // }
   return notes;
 }
 
@@ -213,45 +225,58 @@ std::string decodeNote(){
   
 
     case 1: 
+
       return "C";
     break;
-      return "C#";
+   
     case 2: 
+
     return "C#";
     break;
     case 3: 
+
       return "D";
     break;
     case 4: 
+
       return "D#";
     break;
     case 5: 
+
       return "E";
     break;
     case 6: 
+
       return "F";
     break;
     case 7: 
+ 
     return "F#";
     break;
     case 8: 
+
     return "G";
     break;
     case 9: 
+
     return "G#";
     break;
     case 10: 
+
     return "A";
     break;
     case 11: 
+
     return "A#";
     break;
     case 12: 
+
     return "B";
     break;
 
 
     default: 
+    
     return "No Note";
 
   }
@@ -316,32 +341,32 @@ void displayUpdateTask(void * param){
     u8g2.drawStr(60,30,"LastKey:"); 
     u8g2.setCursor(110,30);
 
-    if(currentStepSize == 0){
+    //if(currentStepSizes[0] == 0){
     u8g2.print(RX_Message[2]);
-    }
-    else{
-      u8g2.print(KEYNUM);
-    }
+    //}
+    // else{
+    //   u8g2.print(KEYNUM);
+    // }
     //u8g2.print();
-  std::string dummy = noteSelect();
+  //std::string dummy = noteSelect();
   //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
   //char conversion. Would use pointers but causes headaches. 
-   if(currentStepSizes[0] != 0){
-  std::string note = noteSelect();
-  for (int i = 0; i < note.size(); i++){
-    char a = note[i];
-    u8g2.setCursor(62 + i*5, 20);
-    u8g2.print(a); 
-  }
-   }
-  //  else{
-  //     std::string note = decodeNote();
+  //  if(currentStepSizes[0] != 0){
+  // std::string note = noteSelect();
   // for (int i = 0; i < note.size(); i++){
   //   char a = note[i];
   //   u8g2.setCursor(62 + i*5, 20);
   //   u8g2.print(a); 
+  // }
   //  }
-  //  }
+  //  else{
+  std::string note = decodeNote();
+  for (int i = 0; i < note.size(); i++){
+    char a = note[i];
+    u8g2.setCursor(62 + i*5, 20);
+    u8g2.print(a); 
+   }
+   //}
   
   // currentFreq = 22000*(currentStepSize>>32);
   // currentPeriod = periods[currentKey];
@@ -589,7 +614,7 @@ void scanKeys(void * pvParameters){
       }
     xSemaphoreGive(keyArrayMutex);
     }
-    TX_Message[3] = keyArray[3];
+    TX_Message[5] = keyArray[3]; //volume is txmessage 5 now
     xQueueSend( msgOutQ, TX_Message, portMAX_DELAY);
   }
 
@@ -642,7 +667,7 @@ void sampleISR() { // so this is added because the key is only shown up on the d
 
     
 
-    int32_t Vout = ((phaseAcc+phaseAcc2 + phaseAcc3) >> 24) - 128; 
+    int32_t Vout = ((phaseAcc + phaseAcc2 + phaseAcc3) >> 24) - 128; 
 
     Vout = Vout >> (8 - keyArray[3]);
 
@@ -706,12 +731,16 @@ void decodeTask(void * param){
     //Serial.println(char(RX_Message[0]));
     
       if (char(RX_Message[0]) == 'R'){
-        currentStepSize = 0;
+        currentStepSizes[0] = 0;
+
       }
 
       if (char(RX_Message[0]) == 'P'){
+        
         int keyNum = RX_Message[2];
         int octave = RX_Message[1];
+        int vol = RX_Message[5];
+        currentStepSizes[0] = stepSizes[keyNum-1];
 
       
         //currentStepSize = stepSizes[keyNum];
@@ -762,50 +791,15 @@ int readJoyStick(){
   double joyX =  analogRead(JOYX_PIN);
   double joyY =  analogRead(JOYY_PIN);
   
-//  u8g2.clearBuffer(); 
-  //c2 is to press
-  //  u8g2.setCursor(20, 30); 
-  // u8g2.print(joyX); 
   u8g2.setCursor(130, 30); 
   u8g2.print(joyY); 
 
-
-    
-
- 
-
-//   if (joyX < 100){
-    
-//   //   u8g2.clearBuffer(); 
-//   u8g2.setFont(u8g2_font_ncenB08_tr);
-
-//   u8g2.drawStr( 10, 20, "Right!"); 
-  
-
-//  }
-
-//   else if (joyX > 900 ){
-    
-//   //   u8g2.clearBuffer(); 
-//   u8g2.setFont(u8g2_font_ncenB08_tr);
-
-//   u8g2.drawStr( 10, 20, "Left!"); 
-
-//  }
-
   if (joyY < 150 && prevJoyY > 150 && prevState > 1){
-    
-  //   u8g2.clearBuffer(); 
   prevState -= 2;
-
  }
 
   else if (joyY > 850 && prevJoyY < 850 && prevState < 2){
-    
-  //   u8g2.clearBuffer(); 
-  // 
   prevState += 2;
-
  }
 
  if (prevState == 0){
@@ -822,15 +816,6 @@ if (C2State == LOW){
  prevJoyY = joyY;
 return -1;
 
-//  else {
-//   u8g2.setFont(u8g2_font_ncenB08_tr);
-
-//   u8g2.drawStr( 10, 20, "No Movement!"); 
-//  }
- 
-
-  
-
 }
 
 int selection = -1;
@@ -844,21 +829,23 @@ void setupMenu(){
   
   if (selection != -1){
     if (selection == 0){
-      u8g2.drawStr( 10, 20, "Standalone Seleted"); 
-      delay(0.5);
+      u8g2.drawStr( 10, 20, "Reciever Seleted"); 
+      delay(1000);
       start = true;
+      reciever = true;
     }
     if (selection == 2){
-      u8g2.drawStr( 10, 20, "Multiboard Selected"); 
-      delay(0.5);
+      u8g2.drawStr( 10, 20, "Transmitter Selected"); 
+      delay(1000);
       start = true;
+      reciever = false;
     }
   }
   else {
     selection = readJoyStick();
-    u8g2.drawStr( 10, 10, "This board is...!"); 
-  u8g2.drawStr( 10, 20, "Standalone"); 
-  u8g2.drawStr( 10, 30, "Connected   "); 
+    u8g2.drawStr( 10, 10, "This board is a...!"); 
+  u8g2.drawStr( 10, 20, "Reciever"); 
+  u8g2.drawStr( 10, 30, "Transmitter"); 
   }
   
   u8g2.sendBuffer(); 
@@ -869,10 +856,7 @@ void setupMenu(){
 
 }
 
-void selectSong(){
-  //initialise some features to play a specific song? TBD
-  //list of options as a UI interface?
-}
+
 SemaphoreHandle_t CAN_TX_Semaphore;
 
 
@@ -949,7 +933,7 @@ void setup() {
       setupMenu();
   }
 
-  CAN_Init(start); //for looping set to true
+  CAN_Init(!reciever); //for looping set to true
 
   CAN_RegisterRX_ISR(CAN_RX_ISR);
 
@@ -997,7 +981,7 @@ NULL,			/* Parameter passed into the task */
 &taskTXHandle ); 
   //Initialise UART
   Serial.begin(9600);
-  Serial.println("Hello World");
+  //Serial.println("Hello World");
 
   //MUTEX
   keyArrayMutex = xSemaphoreCreateMutex();
