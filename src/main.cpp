@@ -11,7 +11,9 @@
   volatile uint8_t currentKey=0;
   volatile uint32_t currentFreq;
   volatile uint32_t currentPeriod;
-  volatile int32_t currentStepSize;
+  volatile int32_t currentStepSize = 0;
+  volatile int32_t currentStepSizes[3] = {0};
+
   volatile int32_t keyArray[7];  // has 7 rows and a 1d array
   const uint32_t base = pow(2, 32)/22000;
   uint32_t stepSizes[12] = {base * 261, base * 329, base * 415, base * 293, base * 370,
@@ -115,67 +117,58 @@ std::string toBinary(int n)
 }
 
 std::string noteSelect(){
-
+std::string notes = "";
+int j = 0;
   for (int i =0; i < 3; i++){
 
-    //if (keyArray[4] == 0){
-
-        //so 70 is hex 112 is decimal c0
+  
+        
       if (keyArray[i] == 112){
-        if (i == 0) {currentKey = 0; currentStepSize = stepSizes[0]; return "C";}
-        if (i == 1) {currentKey = 1; currentStepSize = stepSizes[1]; return "E";}
-        if (i == 2) {currentKey = 2; currentStepSize = stepSizes[2]; return "G#";}
+        if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="C";j ++;}
+        if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "E";j ++;}
+        if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#";j ++;}
         
       } //c2
       if (keyArray[i] == 208){
-        if (i == 0) {currentKey = 3;currentStepSize = stepSizes[3]; return "D";}
-        if (i == 1) {currentKey = 4;currentStepSize = stepSizes[4]; return "F#";}
-        if (i == 2) {currentKey = 5;currentStepSize = stepSizes[5]; return "A#";}
+        if (i == 0) {currentKey = 3;currentStepSizes[j] = stepSizes[3]; notes+= "D";j ++;}
+        if (i == 1) {currentKey = 4;currentStepSizes[j] = stepSizes[4]; notes+= "F#";j ++;}
+        if (i == 2) {currentKey = 5;currentStepSizes[j] = stepSizes[5]; notes+= "A#";j ++;}
 
         
       } //c1
       if (keyArray[i] == 176){
-        if (i == 0) {currentKey = 6;currentStepSize = stepSizes[6]; return "C#";}
-        if (i == 1) {currentKey = 7;currentStepSize = stepSizes[7]; return "F";}
-        if (i == 2) {currentKey = 8;currentStepSize = stepSizes[8]; return "A";}
+        if (i == 0) {currentKey = 6;currentStepSizes[j] = stepSizes[6]; notes+= "C#";j ++;}
+        if (i == 1) {currentKey = 7;currentStepSizes[j] = stepSizes[7]; notes+= "F";j ++;}
+        if (i == 2) {currentKey = 8;currentStepSizes[j] = stepSizes[8]; notes+= "A";j ++;}
 
       
       } //c3
       if (keyArray[i] == 224){
-        if (i == 0) {currentKey = 9;currentStepSize = stepSizes[9]; return "D#";}
-        if (i == 1) {currentKey = 10;currentStepSize = stepSizes[10]; return "G";}
-        if (i == 2) {currentKey = 11;currentStepSize =stepSizes[11]; return "B";}
+        if (i == 0) {currentKey = 9;currentStepSizes[j] = stepSizes[9]; notes+= "D#";j ++;}
+        if (i == 1) {currentKey = 10;currentStepSizes[j] = stepSizes[10]; notes+= "G";j ++;}
+        if (i == 2) {currentKey = 11;currentStepSizes[j] =stepSizes[11]; notes+= "B"; j++;}
 
-        //currentKey = 4*i;
+       
       }
-<<<<<<< Updated upstream
-      if (keyArray[i] == 80){
-        if (i == 0) {currentKey = 12;currentStepSize = floor((stepSizes[0]+stepSizes[3])/2); return "C + D";}
-        if (i == 1) {currentKey = 13;currentStepSize = floor((stepSizes[1]+stepSizes[4])/2); return "E + F#";}
-        if (i == 2) {currentKey = 14;currentStepSize = floor((stepSizes[2]+stepSizes[5])/2); return "G# + A#";}
-      }
-    
-=======
-
-    if (keyArray[i] == 80){
-      if (i == 0) {
-        currentKey = 12;
-        currentStepSize = floor((stepSizes[0]+stepSizes[3])/2);
-         return "C+D";}
-         if (i == 1) {
-          currentKey = 13;
-          currentStepSize = floor((stepSizes[1]+stepSizes[4])/2);
-           return "E+F#";}
-           if (i == 2) {
-            currentKey = 14;currentStepSize = floor((stepSizes[2]+stepSizes[5])/2);
-             return "G#+A#";}// it should be the 2 independant notes and the volume should increase to the next level also        //currentKey = 4*i;      }
->>>>>>> Stashed changes
       
-  }
-  }
+   
 
-  currentStepSize = 0;
-  return "No Note";
+  
+}
+Serial.println(currentKey);
+  if (j == 0){
+    currentStepSizes[0] = 0;
+    currentStepSizes[1] = 0;
+    currentStepSizes[2] = 0;
+  }
+  if (j == 1){
+    currentStepSizes[1] = 0;
+    currentStepSizes[2] = 0;
+  }
+  if (j == 2){
+    currentStepSizes[2] = 0;
+  }
+  return notes;
 }
 
 
@@ -210,6 +203,61 @@ void setRow(uint8_t rowIdx){
   
 
 }
+
+std::string decodeNote(){
+  int noteNum = RX_Message[2];
+
+  
+
+  switch(noteNum){
+  
+
+    case 1: 
+      return "C";
+    break;
+      return "C#";
+    case 2: 
+    return "C#";
+    break;
+    case 3: 
+      return "D";
+    break;
+    case 4: 
+      return "D#";
+    break;
+    case 5: 
+      return "E";
+    break;
+    case 6: 
+      return "F";
+    break;
+    case 7: 
+    return "F#";
+    break;
+    case 8: 
+    return "G";
+    break;
+    case 9: 
+    return "G#";
+    break;
+    case 10: 
+    return "A";
+    break;
+    case 11: 
+    return "A#";
+    break;
+    case 12: 
+    return "B";
+    break;
+
+
+    default: 
+    return "No Note";
+
+  }
+}
+
+
 
 void displayUpdateTask(void * param){
 
@@ -261,25 +309,42 @@ void displayUpdateTask(void * param){
     //u8g2.print((char) TX_Message[0]);
     u8g2.drawStr(30,30,"Oct"); 
     u8g2.setCursor(50,30);
+    if(currentStepSize != 0){
     u8g2.print(RX_Message[1]);
+    }
 
     u8g2.drawStr(60,30,"LastKey:"); 
     u8g2.setCursor(110,30);
+
+    if(currentStepSize == 0){
     u8g2.print(RX_Message[2]);
+    }
+    else{
+      u8g2.print(KEYNUM);
+    }
     //u8g2.print();
-  
+  std::string dummy = noteSelect();
   //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
   //char conversion. Would use pointers but causes headaches. 
-  
+   if(currentStepSizes[0] != 0){
   std::string note = noteSelect();
   for (int i = 0; i < note.size(); i++){
     char a = note[i];
     u8g2.setCursor(62 + i*5, 20);
     u8g2.print(a); 
   }
+   }
+  //  else{
+  //     std::string note = decodeNote();
+  // for (int i = 0; i < note.size(); i++){
+  //   char a = note[i];
+  //   u8g2.setCursor(62 + i*5, 20);
+  //   u8g2.print(a); 
+  //  }
+  //  }
   
-  currentFreq = 22000*(currentStepSize>>32);
-  currentPeriod = periods[currentKey];
+  // currentFreq = 22000*(currentStepSize>>32);
+  // currentPeriod = periods[currentKey];
 
 
     //Serial.println((currentStepSize >> 24) + 128);
@@ -366,10 +431,6 @@ void scanKeys(void * pvParameters){
     else{
         change = 4;
       }
-
-
-  
-
     xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
     if (i < 3)
     {
@@ -383,6 +444,9 @@ void scanKeys(void * pvParameters){
       TX_Message[0] = 'P';
       TX_Message[1] = 4; //octave
       TX_Message[2] = keyNum + change;  //key num
+
+     
+      KEYNUM = keyNum + change;
       //CAN_TX(0x123, TX_Message);
       //xQueueSend( msgOutQ, TX_Message, portMAX_DELAY);
     }
@@ -563,6 +627,8 @@ static uint32_t timer = 0;
 
 void sampleISR() { // so this is added because the key is only shown up on the display but doesn't give audio output, thats where this function comes in.
   static uint32_t phaseAcc = 0; //so this being static means that it is only initialised at the start of the program.
+  static uint32_t phaseAcc2 = 0; 
+  static uint32_t phaseAcc3 = 0; 
   //This is for the sawtooth function
   uint32_t nonstatPhase;//pow(2, 32);
 
@@ -570,9 +636,13 @@ void sampleISR() { // so this is added because the key is only shown up on the d
   //It generates a linear line. 
   if (keyArray[4] == 0)
   {
-    phaseAcc += currentStepSize;
+    phaseAcc += currentStepSizes[0];
+    phaseAcc2 += currentStepSizes[1];
+    phaseAcc3 += currentStepSizes[2];
 
-    int32_t Vout = (phaseAcc >> 24) - 128; 
+    
+
+    int32_t Vout = ((phaseAcc+phaseAcc2 + phaseAcc3) >> 24) - 128; 
 
     Vout = Vout >> (8 - keyArray[3]);
 
@@ -764,7 +834,7 @@ return -1;
 }
 
 int selection = -1;
-
+bool start = false;
 void setupMenu(){
 
 
@@ -774,17 +844,21 @@ void setupMenu(){
   
   if (selection != -1){
     if (selection == 0){
-      u8g2.drawStr( 10, 20, "Transmitter Selected!"); 
+      u8g2.drawStr( 10, 20, "Standalone Seleted"); 
+      delay(0.5);
+      start = true;
     }
     if (selection == 2){
-      u8g2.drawStr( 10, 20, "Reciever Selected!"); 
+      u8g2.drawStr( 10, 20, "Multiboard Selected"); 
+      delay(0.5);
+      start = true;
     }
   }
   else {
     selection = readJoyStick();
-    u8g2.drawStr( 10, 10, "This board is a...!"); 
-  u8g2.drawStr( 10, 20, "Transmitter"); 
-  u8g2.drawStr( 10, 30, "Reciever   "); 
+    u8g2.drawStr( 10, 10, "This board is...!"); 
+  u8g2.drawStr( 10, 20, "Standalone"); 
+  u8g2.drawStr( 10, 30, "Connected   "); 
   }
   
   u8g2.sendBuffer(); 
@@ -830,14 +904,7 @@ void setup() {
   sampleTimer->attachInterrupt(sampleISR);
   sampleTimer->resume();
 
-  CAN_Init(true); //for looping set to true
-
-  CAN_RegisterRX_ISR(CAN_RX_ISR);
-
-  CAN_RegisterTX_ISR(CAN_TX_ISR);
-
-  setCANFilter(0x123,0x7ff);
-  CAN_Start();
+ 
 
   //CAN part 3
 
@@ -872,18 +939,24 @@ void setup() {
   setOutMuxBit(DEN_BIT, HIGH);  //Enable display power supply
 
 
-  while(millis() < 5000){ //does onstart
+   while(millis() < 5000){ //does onstart
     int offset = (millis() < 2500) ?  int(millis() / 50) : 50;
     onStart(offset);
   }
 
-  bool start = false;
+  
   while(!start){
-
       setupMenu();
-
-
   }
+
+  CAN_Init(start); //for looping set to true
+
+  CAN_RegisterRX_ISR(CAN_RX_ISR);
+
+  CAN_RegisterTX_ISR(CAN_TX_ISR);
+
+  setCANFilter(0x123,0x7ff);
+  CAN_Start();
 
 
   TaskHandle_t scanKeysHandle = NULL;
