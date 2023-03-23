@@ -8,6 +8,6 @@
 
 ## Advanced Features
 ### [Octaves](https://github.com/Hongsworth/ES-synth-starter/blob/master/octave.md)
-
+### [Solo Mode]
 
 Solo Mode cannot be played in Receiver mode
