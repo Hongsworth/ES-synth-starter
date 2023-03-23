@@ -1,11 +1,10 @@
 # Table of Contents
 ## Basic Features
-### Sawtooth Wave Tones
-
-### Main Menu
-### Volume Control
+### [Sawtooth Wave Tones](https://github.com/Hongsworth/ES-synth-starter/blob/master/sawtooth.md)
+### [Main Menu](https://github.com/Hongsworth/ES-synth-starter/blob/master/mainmenu.md)
+### [Volume Control](https://github.com/Hongsworth/ES-synth-starter/blob/master/volume.md)
 ### [CAN Bus Functionality](https://github.com/Hongsworth/ES-synth-starter/blob/master/canbus.md)
-### Transmitter-Receiver Communication
+### [Transmitter-Receiver Communication](https://github.com/Hongsworth/ES-synth-starter/blob/master/transmit-receive.md)
 
 ## Advanced Features
-### Octaves
+### [Octaves](https://github.com/Hongsworth/ES-synth-starter/blob/master/octave.md)
