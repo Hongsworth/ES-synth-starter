@@ -4,7 +4,7 @@
 
 ### Main Menu
 ### Volume Control
-### CAN Bus Functionality
+### [CAN Bus Functionality] (canbus.md)
 ### Transmitter-Receiver Communication
 
 ## Advanced Features
