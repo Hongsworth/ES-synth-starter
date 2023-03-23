@@ -10,6 +10,8 @@
   bool reciever = false;
   char prevMessage;
 
+  int OCTAVE = 4;
+
   volatile int KEYNUM = 0;
   volatile uint8_t currentKey=0;
   volatile uint32_t currentFreq;
@@ -124,16 +126,16 @@ std::string notes = "";
 int j = 0;
   for (int i =0; i < 3; i++){
 
-      if (keyArray[i] == 50){
-        if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="CD";j ++;}
-        if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "EF#";j ++;}
-        if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#A#";j ++;}
-      }
-      if (keyArray[i] == 30){
-        if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="CC#";j ++;}
-        if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "EF";j ++;}
-        if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#A";j ++;}
-      }
+      // if (keyArray[i] == 50){
+      //   if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="CD";j ++;}
+      //   if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "EF#";j ++;}
+      //   if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#A#";j ++;}
+      // }
+      // if (keyArray[i] == 30){
+      //   if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="CC#";j ++;}
+      //   if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "EF";j ++;}
+      //   if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#A";j ++;}
+      // }
         
       if (keyArray[i] == 112){
         if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="C";j ++;}
