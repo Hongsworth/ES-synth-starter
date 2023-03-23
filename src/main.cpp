@@ -5,6 +5,8 @@
 #include <chrono>
 #include <ES_CAN.h>
 
+using std::chrono::high_resolution_clock;
+
 //Constants
   const uint32_t interval = 100; //Display update interval
 
