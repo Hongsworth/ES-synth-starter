@@ -2,6 +2,7 @@
 #include <U8g2lib.h>
 #include <STM32FreeRTOS.h>
 #include <cmath>
+#include <chrono>
 #include <ES_CAN.h>
 
 //Constants
@@ -11,7 +12,7 @@
   bool soloMode = false;
   char prevMessage = 'R';
 
-  int OCTAVE = 5;
+  int OCTAVE = 6;
   int originalOCTAVE;
 
   volatile int KEYNUM = 0;
@@ -26,13 +27,21 @@
   uint32_t stepSizes[12] = {base * 261, base * 329, base * 415, base * 293, base * 370,
    base* 466, base*  277, base* 349, base * 440, base* 311, base* 392, base* 493}; //octave4
 
-  uint32_t stepSizesoct2[12] = {base * 65, base * 69, base * 73,  base * 78, base * 82, base * 87, base * 92, base * 98, base * 104, base * 110, base * 117, base * 123};
-  uint32_t stepSizesoct3[12] = {base * 131, base * 139, base * 147, base * 156, base * 165, base * 175, base * 185, base * 196, base * 208, base * 220, base * 233, base * 247};
-  uint32_t stepSizesoct5[12] = {base * 523, base * 554, base * 587,  base * 622, base * 659, base * 698, base * 740, base * 784, base * 831, base * 880, base * 932, base * 988};
-  uint32_t stepSizesoct6[12] = {base * 1047, base * 1109, base * 1175, base * 1245, base * 1319, base * 1397, base * 1480, base * 1568, base * 1661, base * 1760, base * 1865, base * 1980};
-  
+  uint32_t stepSizesoct2[12] = {12769719, 16088557,20270293,14333476,18058385,22751613,13529147,17045162,21474836,15184661,19132127,24104528};//{base * 65, base * 69, base * 73,  base * 78, base * 82, base * 87, base * 92, base * 98, base * 104, base * 110, base * 117, base * 123};
+  uint32_t stepSizesoct3[12] = {25537484,32175161,40538633,28665002,36116770,45503226,27056340,34088374,42949672,30369322,38264254,48209056};//{base * 131, base * 139, base * 147, base * 156, base * 165, base * 175, base * 185, base * 196, base * 208, base * 220, base * 233, base * 247};
+  uint32_t stepSizesoct5[12] = {102151892,128704553,162156487,114661964,144465127,182014860,108227318,136357406,171798691,121479245,153055062,192838178};//{base * 523, base * 554, base * 587,  base * 622, base * 659, base * 698, base * 740, base * 784, base * 831, base * 880, base * 932, base * 988};
+  uint32_t stepSizesoct6[12] = {204303785,257407153,324312974,229323928,288930255,364029721,216452682,272712859,343597383,242960445,306110124,385674403};//{base * 1047, base * 1109, base * 1175, base * 1245, base * 1319, base * 1397, base * 1480, base * 1568, base * 1661, base * 1760, base * 1865, base * 1980};
+  // octave 2 {12769719, 16088557,20270293,14333476,18058385,22751613,13529147,17045162,21474836,15184661,19132127,24104528}
+  // octave 3 {25537484,32175161,40538633,28665002,36116770,45503226,27056340,34088374,42949672,30369322,38264254,48209056};
+  // octave 4 {51076923,64352276,81077266,57330005,72231586,91006453,54112681,68178703,85899345,60740599,76528508,96418112};
+  // octave 5 {102151892,128704553,162156487,114661964,144465127,182014860,108227318,136357406,171798691,121479245,153055062,192838178}
+  // octave 6 {204303785,257407153,324312974,229323928,288930255,364029721,216452682,272712859,343597383,242960445,306110124,385674403}
 
-
+  uint32_t orderedoct2[12] = {base * 65, base * 69, base * 73,  base * 78, base * 82, base * 87, base * 92, base * 98, base * 104, base * 110, base * 117, base * 123};
+  uint32_t orderedoct3[12] = {base * 131, base * 139, base * 147, base * 156, base * 165, base * 175, base * 185, base * 196, base * 208, base * 220, base * 233, base * 247};
+  uint32_t orderedoct5[12] = {base * 523, base * 554, base * 587,  base * 622, base * 659, base * 698, base * 740, base * 784, base * 831, base * 880, base * 932, base * 988};
+  uint32_t orderedoct6[12] = {base * 1047, base * 1109, base * 1175, base * 1245, base * 1319, base * 1397, base * 1480, base * 1568, base * 1661, base * 1760, base * 1865, base * 1980};
+  uint32_t orderedoct4[12] = {base * 261, base*  277, base * 293, base* 311, base * 329, base* 349, base * 370, base* 392, base * 415, base * 440, base* 466, base* 493};
 
 
    const uint32_t periods[12] = {22000/261, 22000/329, 22000/415, 22000/293, 22000/370, 
@@ -136,7 +145,7 @@ std::string noteSelect(){
 std::string notes = "";
 int j = 0;
 uint32_t stepSizesLoc[12];
-Serial.println(OCTAVE);
+//Serial.println(OCTAVE);
 if (OCTAVE == 2){
     for (int i = 0; i < 12; i++)
     {stepSizesLoc[i] = stepSizesoct2[i];}
@@ -196,7 +205,7 @@ if (OCTAVE == 2){
   
 }
 
-if (keyArray[0] == 240 && keyArray[1] == 240 && keyArray[2] == 240 && prevMessage != 'P')
+if (keyArray[0] == 240 && keyArray[1] == 240 && keyArray[2] == 240 && (prevMessage != 'P' || soloMode))
 {
   currentStepSizes[0] = 0;
 }
@@ -425,6 +434,11 @@ if (reciever){
       }
       else if (soloMode){
         note = noteSelect();
+        for (int i = 0; i < note.size(); i++){
+          char a = note[i];
+          u8g2.setCursor(62 + i*5, 20);
+          u8g2.print(a); 
+          }
           u8g2.drawStr(60,30,"SOLO"); 
         
 
@@ -502,28 +516,28 @@ void scanKeys(void * pvParameters){
       conv+=2;
       }
       else{
-        change = 1;
+        change = 0;
       }
     if (c1 == HIGH){
       output+=pow(2, 6);
       conv+=1;
       }
       else{
-        change = 2;
+        change = 1;
       }
     if (c2 == HIGH){
       output+=pow(2, 5);
       
     }
     else{
-        change = 3;
+        change = 2;
       }
     if (c3 == HIGH){
       output+=pow(2, 4);
       
     }
     else{
-        change = 4;
+        change = 3;
       }
     xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
     if (i < 3 )
@@ -725,6 +739,8 @@ void sampleISR() { // so this is added because the key is only shown up on the d
   static uint32_t phaseAcc = 0; //so this being static means that it is only initialised at the start of the program.
   static uint32_t phaseAcc2 = 0; 
   static uint32_t phaseAcc3 = 0; 
+  int j=0;
+
   //This is for the sawtooth function
   uint32_t nonstatPhase;//pow(2, 32);
 
@@ -733,16 +749,17 @@ void sampleISR() { // so this is added because the key is only shown up on the d
   if (keyArray[4] == 0)
   {
     phaseAcc += currentStepSizes[0];
-    phaseAcc2 += currentStepSizes[1];
-    phaseAcc3 += currentStepSizes[2];
 
-    
-
-    int32_t Vout = ((phaseAcc + phaseAcc2 + phaseAcc3) >> 24) - 128; 
+    int32_t Vout = ((phaseAcc) >> 24) - 128; 
 
     Vout = Vout >> (8 - keyArray[3]);
 
     analogWrite(OUTR_PIN, Vout + 128);
+
+    j++;
+    if(j>22000){
+    phaseAcc=0;
+    }
 
   }
   else if (keyArray[4] == 1 && currentStepSize != 0)
@@ -813,7 +830,32 @@ void decodeTask(void * param){
         int keyNum = RX_Message[2];
         
         int vol = RX_Message[5];
-        currentStepSizes[0] = stepSizes[keyNum-1];
+        uint32_t stepSizesLoc[12];
+//Serial.println(OCTAVE);
+        if (OCTAVE == 2){
+            for (int i = 0; i < 12; i++)
+            {stepSizesLoc[i] = orderedoct2[i];}
+          }
+          if (OCTAVE == 3){
+            for (int i = 0; i < 12; i++)
+            {stepSizesLoc[i] = orderedoct3[i];}
+          }
+          if (OCTAVE == 4){
+            for (int i = 0; i < 12; i++)
+            {stepSizesLoc[i] = orderedoct4[i];}
+            
+          }
+          if (OCTAVE == 5){
+            for (int i = 0; i < 12; i++)
+            {stepSizesLoc[i] = orderedoct5[i];}
+          }
+          if (OCTAVE == 6){
+            for (int i = 0; i < 12; i++)
+            {stepSizesLoc[i] = orderedoct6[i];}
+          }
+        
+
+        currentStepSizes[0] = stepSizesLoc[keyNum];
         prevMessage = 'P';
       
         //currentStepSize = stepSizes[keyNum];
@@ -1000,6 +1042,8 @@ void setup() {
 
   //alterSetup(); //changes the step functions
 
+   Serial.begin(9600);
+
    TIM_TypeDef *Instance = TIM1;
    HardwareTimer *sampleTimer = new HardwareTimer(Instance);
 
@@ -1102,7 +1146,7 @@ NULL,			/* Parameter passed into the task */
 
 
   //Initialise UART
-  Serial.begin(9600);
+ 
   //Serial.println("Hello World");
 
   //MUTEX
