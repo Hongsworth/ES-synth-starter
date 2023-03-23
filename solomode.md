@@ -1,15 +1,8 @@
-CAN BUS functionality is an essential feature in many modern devices that require communication between multiple components. It allows for seamless transmission of data between devices, and ensures that all parts of a system can work together in harmony. In the context of a keyboard, the CAN BUS functionality is especially important, as it allows for the keyboard to communicate with other devices, such as a computer or a synthesizer.
+# Solo Mode
 
-However, a common issue with keyboards that rely solely on CAN BUS functionality is that they can experience problems when there are no other devices connected. This is because the keyboard is designed to wait for data to be received through the CAN BUS, and without this connection, it can become unresponsive and freeze up. This can be frustrating for users, and can negatively impact the overall user experience.
+Upon startup, the synth provides the ability to choose the mode 'Solo Mode' using the joystick. It allows the user to operate a single synth on its own with full functionality and ability to switch octaves.
 
-To address this issue, a solo option has been added to some keyboards. This option allows the keyboard to operate independently, without relying on external devices for data transmission. By including this feature, users can now enjoy uninterrupted use of the keyboard, even when there are no other devices connected. This enhancement ensures that the keyboard remains functional and reliable, providing a seamless user experience.
+The addition of a solo option to a keyboard required careful consideration of a number of factors. One important consideration was the hardware of the keyboard itself. The keyboard must be able to function independently, without relying on other devices for data transmission. This requires the inclusion of additional hardware, such as a microcontroller, to enable the keyboard to operate independently.
 
-The addition of a solo option to a keyboard requires careful consideration of a number of factors. One important consideration is the hardware of the keyboard itself. The keyboard must be able to function independently, without relying on other devices for data transmission. This requires the inclusion of additional hardware, such as a microcontroller, to enable the keyboard to operate independently.
-
-Another consideration is the user interface of the keyboard. When the keyboard is in solo mode, it must still be able to provide users with feedback on their actions. This requires the inclusion of additional features, such as LEDs or a display, to provide users with the necessary feedback.
-
-In addition to these hardware considerations, there are also software considerations that must be taken into account. The keyboard must be able to detect when it is in solo mode, and switch its behavior accordingly. This requires the development of custom firmware, which can be a complex and time-consuming process.
-
-Despite these challenges, the addition of a solo option to a keyboard can provide significant benefits to users. It allows for uninterrupted use of the keyboard, even when other devices are not available, and can improve the overall user experience. This feature is particularly useful for musicians who need a reliable keyboard for live performances, as it ensures that the keyboard remains functional even in the absence of other devices.
-
-In conclusion, the addition of a solo option to a keyboard is a significant enhancement that can improve the overall functionality and reliability of the keyboard. While it requires careful consideration of both hardware and software factors, the benefits of this feature are clear. By enabling uninterrupted use of the keyboard, even when other devices are not available, users can enjoy a seamless and enjoyable user experience.
+## Main Implementation
+We implemented solo mode by repurposing the CAN bus to be initialized to loop onto itself. This allows it to send messages to itself so that it can function on its own as an independent synth.
