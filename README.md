@@ -9,3 +9,5 @@
 ## Advanced Features
 ### [Octaves](https://github.com/Hongsworth/ES-synth-starter/blob/master/octave.md)
 ### [Solo Mode](https://github.com/Hongsworth/ES-synth-starter/blob/master/solomode.md)
+
+Implementation in main.cpp of master branch. If this does not work, switch to branch named 'Angelo'
