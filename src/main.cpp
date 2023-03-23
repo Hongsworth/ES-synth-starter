@@ -8,7 +8,7 @@
   const uint32_t interval = 100; //Display update interval
 
   bool reciever = false;
-
+  char prevMessage;
 
   volatile int KEYNUM = 0;
   volatile uint8_t currentKey=0;
@@ -167,6 +167,12 @@ int j = 0;
       
   
 }
+
+if (keyArray[0] == 240 && keyArray[1] == 240 && keyArray[2] == 240 && prevMessage != 'P')
+{
+  currentStepSizes[0] = 0;
+}
+
 //Serial.println(currentKey);
   // if (j == 0){
   //   currentStepSizes[0] = 0;
@@ -334,9 +340,11 @@ void displayUpdateTask(void * param){
     //u8g2.print((char) TX_Message[0]);
     u8g2.drawStr(30,30,"Oct"); 
     u8g2.setCursor(50,30);
-    if(currentStepSize != 0){
+    //if(currentStepSize != 0){
+
+      if (reciever){
     u8g2.print(RX_Message[1]);
-    }
+    //}
 
     u8g2.drawStr(60,30,"LastKey:"); 
     u8g2.setCursor(110,30);
@@ -351,21 +359,39 @@ void displayUpdateTask(void * param){
   //std::string dummy = noteSelect();
   //prints the current note. Strings not compatible (WHYYYY????) So have to do this tedious
   //char conversion. Would use pointers but causes headaches. 
-  //  if(currentStepSizes[0] != 0){
-  // std::string note = noteSelect();
-  // for (int i = 0; i < note.size(); i++){
-  //   char a = note[i];
-  //   u8g2.setCursor(62 + i*5, 20);
-  //   u8g2.print(a); 
-  // }
-  //  }
-  //  else{
-  std::string note = decodeNote();
+  // if(currentStepSizes[0] != 0){
+    
+  std::string note = noteSelect();
+    
+
+  if (currentStepSizes[0] != 0){
   for (int i = 0; i < note.size(); i++){
     char a = note[i];
     u8g2.setCursor(62 + i*5, 20);
     u8g2.print(a); 
    }
+    }
+   else if (char(RX_Message[0]) == 'P'){
+  note = decodeNote();
+  for (int i = 0; i < note.size(); i++){
+    char a = note[i];
+    u8g2.setCursor(62 + i*5, 20);
+    u8g2.print(a); 
+   }
+   }else {
+    currentStepSizes[0] = 0;
+   }
+
+
+
+    u8g2.drawStr(90,20,"REC"); 
+
+      }
+
+      else {
+        u8g2.drawStr(60,30,"TRA"); 
+      }
+
    //}
   
   // currentFreq = 22000*(currentStepSize>>32);
@@ -729,19 +755,21 @@ void decodeTask(void * param){
   while(1){
     xQueueReceive(msgInQ, RX_Message, portMAX_DELAY);
     //Serial.println(char(RX_Message[0]));
-    
-      if (char(RX_Message[0]) == 'R'){
+
+      if (char(RX_Message[0]) == 'R' && reciever && prevMessage != 'R'){
         currentStepSizes[0] = 0;
+        prevMessage = 'R';
 
       }
+      
 
-      if (char(RX_Message[0]) == 'P'){
+      if (char(RX_Message[0]) == 'P' && reciever && prevMessage != 'P'){
         
         int keyNum = RX_Message[2];
         int octave = RX_Message[1];
         int vol = RX_Message[5];
         currentStepSizes[0] = stepSizes[keyNum-1];
-
+        prevMessage = 'P';
       
         //currentStepSize = stepSizes[keyNum];
         //currentStepSize *= pow(2, octave - 4);
@@ -933,7 +961,7 @@ void setup() {
       setupMenu();
   }
 
-  CAN_Init(!reciever); //for looping set to true
+  CAN_Init(false); //for looping set to true
 
   CAN_RegisterRX_ISR(CAN_RX_ISR);
 
