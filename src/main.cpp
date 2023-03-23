@@ -11,7 +11,8 @@
   bool soloMode = false;
   char prevMessage = 'R';
 
-  int OCTAVE = 4;
+  int OCTAVE = 5;
+  int originalOCTAVE;
 
   volatile int KEYNUM = 0;
   volatile uint8_t currentKey=0;
@@ -26,9 +27,9 @@
    base* 466, base*  277, base* 349, base * 440, base* 311, base* 392, base* 493}; //octave4
 
   uint32_t stepSizesoct2[12] = {base * 65, base * 69, base * 73,  base * 78, base * 82, base * 87, base * 92, base * 98, base * 104, base * 110, base * 117, base * 123};
-  uint32_t stepSizeoct3[12] = {base * 131, base * 139, base * 147, base * 156, base * 165, base * 175, base * 185, base * 196, base * 208, base * 220, base * 233, base * 247};
-  uint32_t stepSizeoct5[12] = {base * 523, base * 554, base * 587,  base * 622, base * 659, base * 698, base * 740, base * 784, base * 831, base * 880, base * 932, base * 988};
-  uint32_t stepSizeoct6[12] = {base * 1047, base * 1109, base * 1175, base * 1245, base * 1319, base * 1397, base * 1480, base * 1568, base * 1661, base * 1760, base * 1865, base * 1980};
+  uint32_t stepSizesoct3[12] = {base * 131, base * 139, base * 147, base * 156, base * 165, base * 175, base * 185, base * 196, base * 208, base * 220, base * 233, base * 247};
+  uint32_t stepSizesoct5[12] = {base * 523, base * 554, base * 587,  base * 622, base * 659, base * 698, base * 740, base * 784, base * 831, base * 880, base * 932, base * 988};
+  uint32_t stepSizesoct6[12] = {base * 1047, base * 1109, base * 1175, base * 1245, base * 1319, base * 1397, base * 1480, base * 1568, base * 1661, base * 1760, base * 1865, base * 1980};
   
 
 
@@ -134,34 +135,58 @@ std::string toBinary(int n)
 std::string noteSelect(){
 std::string notes = "";
 int j = 0;
+uint32_t stepSizesLoc[12];
+Serial.println(OCTAVE);
+if (OCTAVE == 2){
+    for (int i = 0; i < 12; i++)
+    {stepSizesLoc[i] = stepSizesoct2[i];}
+  }
+  if (OCTAVE == 3){
+    for (int i = 0; i < 12; i++)
+    {stepSizesLoc[i] = stepSizesoct3[i];}
+  }
+  if (OCTAVE == 4){
+    for (int i = 0; i < 12; i++)
+    {stepSizesLoc[i] = stepSizes[i];}
+    
+  }
+  if (OCTAVE == 5){
+    for (int i = 0; i < 12; i++)
+    {stepSizesLoc[i] = stepSizesoct5[i];}
+  }
+  if (OCTAVE == 6){
+    for (int i = 0; i < 12; i++)
+    {stepSizesLoc[i] = stepSizesoct6[i];}
+  }
+
   for (int i =0; i < 3; i++){
 
     
         
       if (keyArray[i] == 112){
-        if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizes[0]; ;notes+="C";j ++;}
-        if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizes[1]; ;notes+= "E";j ++;}
-        if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizes[2]; ;notes+= "G#";j ++;}
+        if (i == 0) {; currentKey = 0; currentStepSizes[j] = stepSizesLoc[0]; ;notes+="C";j ++;}
+        if (i == 1) {;currentKey = 1; currentStepSizes[j] = stepSizesLoc[1]; ;notes+= "E";j ++;}
+        if (i == 2) {;currentKey = 2; currentStepSizes[j] = stepSizesLoc[2]; ;notes+= "G#";j ++;}
         
       } //c2
       if (keyArray[i] == 208){
-        if (i == 0) {currentKey = 3;currentStepSizes[j] = stepSizes[3]; notes+= "D";j ++;}
-        if (i == 1) {currentKey = 4;currentStepSizes[j] = stepSizes[4]; notes+= "F#";j ++;}
-        if (i == 2) {currentKey = 5;currentStepSizes[j] = stepSizes[5]; notes+= "A#";j ++;}
+        if (i == 0) {currentKey = 3;currentStepSizes[j] = stepSizesLoc[3]; notes+= "D";j ++;}
+        if (i == 1) {currentKey = 4;currentStepSizes[j] = stepSizesLoc[4]; notes+= "F#";j ++;}
+        if (i == 2) {currentKey = 5;currentStepSizes[j] = stepSizesLoc[5]; notes+= "A#";j ++;}
 
         
       } //c1
       if (keyArray[i] == 176){
-        if (i == 0) {currentKey = 6;currentStepSizes[j] = stepSizes[6]; notes+= "C#";j ++;}
-        if (i == 1) {currentKey = 7;currentStepSizes[j] = stepSizes[7]; notes+= "F";j ++;}
-        if (i == 2) {currentKey = 8;currentStepSizes[j] = stepSizes[8]; notes+= "A";j ++;}
+        if (i == 0) {currentKey = 6;currentStepSizes[j] = stepSizesLoc[6]; notes+= "C#";j ++;}
+        if (i == 1) {currentKey = 7;currentStepSizes[j] = stepSizesLoc[7]; notes+= "F";j ++;}
+        if (i == 2) {currentKey = 8;currentStepSizes[j] = stepSizesLoc[8]; notes+= "A";j ++;}
 
       
       } //c3
       if (keyArray[i] == 224){
-        if (i == 0) {currentKey = 9;currentStepSizes[j] = stepSizes[9]; notes+= "D#";j ++;}
-        if (i == 1) {currentKey = 10;currentStepSizes[j] = stepSizes[10]; notes+= "G";j ++;}
-        if (i == 2) {currentKey = 11;currentStepSizes[j] =stepSizes[11]; notes+= "B"; j++;}
+        if (i == 0) {currentKey = 9;currentStepSizes[j] = stepSizesLoc[9]; notes+= "D#";j ++;}
+        if (i == 1) {currentKey = 10;currentStepSizes[j] = stepSizesLoc[10]; notes+= "G";j ++;}
+        if (i == 2) {currentKey = 11;currentStepSizes[j] =stepSizesLoc[11]; notes+= "B"; j++;}
 
        
       }
@@ -347,7 +372,8 @@ void displayUpdateTask(void * param){
     //if(currentStepSize != 0){
 
    
-    u8g2.print(RX_Message[1]);
+    u8g2.print(OCTAVE);
+   
     //}
 
     u8g2.drawStr(60,30,"LastKey:"); 
@@ -511,7 +537,7 @@ void scanKeys(void * pvParameters){
       keyNum = i*4;
       if (!reciever){
       TX_Message[0] = 'P';
-      TX_Message[1] = 4; //octave
+      TX_Message[1] = OCTAVE; //octave
       TX_Message[2] = keyNum + change;  //key num
       }
      
@@ -523,7 +549,7 @@ void scanKeys(void * pvParameters){
       keyNum = i*4;
       if (!reciever)
       {TX_Message[0] = 'R';
-      TX_Message[1] = 4;} //octave
+      TX_Message[1] = OCTAVE;} //octave
       //TX_Message[2] = keyNum + change;  //key num
       //CAN_TX(0x123, TX_Message); //DO NOT UPDATE KEY PRESSED HERE!!!
       //xQueueSend( msgOutQ, TX_Message, portMAX_DELAY);
@@ -774,18 +800,18 @@ void decodeTask(void * param){
   while(1){
     xQueueReceive(msgInQ, RX_Message, portMAX_DELAY);
     //Serial.println(char(RX_Message[0]));
-
+      
       if (char(RX_Message[0]) == 'R' && reciever && prevMessage != 'R'){
         currentStepSizes[0] = 0;
         prevMessage = 'R';
-
+        OCTAVE = originalOCTAVE;
       }
       
 
       if (char(RX_Message[0]) == 'P' && reciever && prevMessage != 'P'){
-        
+        OCTAVE = RX_Message[1];
         int keyNum = RX_Message[2];
-        int octave = RX_Message[1];
+        
         int vol = RX_Message[5];
         currentStepSizes[0] = stepSizes[keyNum-1];
         prevMessage = 'P';
@@ -823,6 +849,7 @@ void onStart(int offset){ //A short demo function that does nothing.
 int prevState = 0;
 int prevJoyY = 500;
 int prevJoyX = 500;
+int prevC2State = HIGH;
 
 
 int readJoyStick(){
@@ -843,6 +870,16 @@ int readJoyStick(){
   prevState += 2;
  }
 
+ if (joyX < 150 && prevJoyX > 150 && prevState%2 == 0)
+ {
+  prevState += 1;
+ }
+ if (joyX > 850 && prevJoyX <850 && prevState%2 == 1)
+ {
+  prevState -= 1;
+ }
+ 
+
  if (prevState == 0){
   u8g2.drawStr( 5, 10, ">"); 
  }
@@ -854,12 +891,24 @@ int readJoyStick(){
  if (prevState == 4){
   u8g2.drawStr( 5, 30, ">"); 
  }
+ if (prevState == 1){
+  u8g2.drawStr( 80, 10, ">"); 
+ }
+ if (prevState == 3){
+  u8g2.drawStr( 80, 20, ">"); 
+ }
+ if (prevState == 5){
+  u8g2.drawStr( 80, 30, ">"); 
+ }
  
 
-if (C2State == LOW){
+if (C2State == LOW ){
+  
   return prevState;
 }
  prevJoyY = joyY;
+ prevJoyX = joyX;
+ //prevC2State = C2State;
 return -1;
 
 }
@@ -875,7 +924,7 @@ void setupMenu(){
   
   if (selection != -1){
     if (selection == 0){
-      u8g2.drawStr( 10, 20, "Reciever Seleted"); 
+      u8g2.drawStr( 10, 20, "Receiver Selected"); 
       delay(1000);
       start = true;
       reciever = true;
@@ -894,13 +943,28 @@ void setupMenu(){
       reciever = false;
       soloMode = true;
     }
+    if (selection == 1){
+      if (OCTAVE < 6)
+      {OCTAVE+=1;}
+      else {OCTAVE = 2;}
+      selection = -1;
+      originalOCTAVE = OCTAVE;
+      delay(250);
+    }
+
     
   }
   else {
     selection = readJoyStick();
     u8g2.drawStr( 10, 30, "Solo"); 
-  u8g2.drawStr( 10, 10, "Reciever"); 
+    u8g2.drawStr( 85, 10, "OCT"); 
+  u8g2.drawStr( 10, 10, "Receiver"); 
+  u8g2.drawStr( 85, 20, "GAME"); 
   u8g2.drawStr( 10, 20, "Transmitter"); 
+  u8g2.drawStr( 85, 30, "CREDS"); 
+
+  u8g2.setCursor(120, 10);
+  u8g2.print(OCTAVE);
   }
   
   u8g2.sendBuffer(); 
