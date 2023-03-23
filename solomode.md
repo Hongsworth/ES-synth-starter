@@ -1,3 +1,3 @@
-# Solo Mode
+The CAN BUS functionality is a crucial feature that allows communication between a sender and receiver. When there are no devices connected via the CAN BUS, it can cause problems for a solo keyboard. This is because the keyboard is designed to rely on receiving data from external devices through the CAN BUS, and without this connection, the keyboard can freeze up.
 
-Solo Mode is available at startup through the menu (see details of the menu [here](https://github.com/Hongsworth/ES-synth-starter/edit/master/mainmenu.md)). It allows the user to operate all functionalities using just one synth.
+To address this issue, a solo option has been added to the keyboard. This allows for the keyboard to operate independently without relying on external devices. By including this option, users can now enjoy uninterrupted use of the keyboard, even when there are no other devices connected. This enhancement ensures that the keyboard remains functional and reliable, providing a seamless user experience.
