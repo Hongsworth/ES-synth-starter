@@ -1027,9 +1027,9 @@ void setupMenu(){
     u8g2.drawStr( 10, 30, "Solo"); 
     u8g2.drawStr( 85, 10, "OCT"); 
   u8g2.drawStr( 10, 10, "Receiver"); 
-  u8g2.drawStr( 85, 20, "GAME"); 
+
   u8g2.drawStr( 10, 20, "Sender"); 
-  u8g2.drawStr( 85, 30, "CREDS"); 
+
 
   u8g2.setCursor(120, 10);
   u8g2.print(OCTAVE);
